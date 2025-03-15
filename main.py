@@ -51,7 +51,8 @@ async def send_message(chat_request: ChatGptRequestModel):
         return response
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print("Error: ", e)
+
 
 # Точка входа для запуска приложения (если требуется запуск локально)
 if __name__ == "__main__":

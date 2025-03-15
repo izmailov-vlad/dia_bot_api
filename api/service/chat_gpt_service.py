@@ -1,17 +1,18 @@
+from datetime import datetime
+from api.schemas.task_model import TaskModel
 import json
-from fastapi import Depends
 from openai import OpenAI
-from sqlalchemy.ext.asyncio import AsyncSession
 from api.schemas.chat_gpt_request_model import ChatGptRequestModel
-from api.schemas.daily_plan_model import DailyPlanModel
-from database.database import get_db
+
 
 base_prompt = """
 Ты — персональный менеджер расписания. Твоя задача — помогать пользователю эффективно управлять своим временем. Пользователь может просить тебя:
+Язык ответа - русский.
 
 1. Создание задачи:
 - Название задачи определяется из сообщения пользователя автоматически.
 - Если пользователь не указывает дату и время, запланировать задачу на весь текущий день (c 00:00 до 23:59).
+- Для создания задачи используй функцию create_task.
 - Ответ возвращай в формате Task(JsonSchema)
 - Не задавай никаких уточняющих вопросов
 
@@ -38,56 +39,6 @@ base_prompt = """
 Если пользователь хочет получить свое расписание, то ему должен вернуться Day (JsonSchema)
 
 Спецификация json:
-
-Task:
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Task",
-  "type": "object",
-  "properties": {
-    "id": { "type": "string" },
-    "title": { "type": "string" },
-    "description": { "type": "string" },
-    "startTime": { "type": "string", "format": "date-time" },
-    "endTime": { "type": "string", "format": "date-time" },
-    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
-    "category": { "type": "string" },
-    "status": { "type": "string", "enum": ["planned", "in_progress", "completed", "cancelled"] },
-    "location": { "type": "string" },
-    "reminders": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "time": { "type": "string", "format": "date-time" },
-          "method": { "type": "string", "enum": ["push", "email", "sms"] }
-        },
-        "required": ["time", "method"]
-      }
-    },
-    "recurrence": {
-      "type": "object",
-      "properties": {
-        "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
-        "interval": { "type": "integer", "minimum": 1 },
-        "endDate": { "type": "string", "format": "date-time" }
-      },
-      "required": ["frequency", "interval"]
-    },
-    "createdAt": { "type": "string", "format": "date-time" },
-    "updatedAt": { "type": "string", "format": "date-time" }
-  },
-  "required": [
-    "id",
-    "title",
-    "startTime",
-    "endTime",
-    "status",
-    "createdAt",
-    "updatedAt"
-  ],
-  "additionalProperties": false
-}
 
 Day:
 {
@@ -159,8 +110,58 @@ Week:
 }
 """
 
-create_schedule_prompt = """
-\n\n\n### Response Format should be in json and constains only [tasks] fields\ntask :\ntitle (required str),\ndescription (optional str)\nstartAt (required DateTime)\nendAt (required DateTime)\n"
+date_time_property = f"Важно: Всегда используй текущую дату и время для создания задач. Никогда не используй прошедшие даты. Текущая дата и время: {datetime.now()}"
+
+create_task_prompt = """
+Создай задачу в соответствии с json schema.
+Язык ответа - русский.
+{date_time_property}
+
+Task(json schema):
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "start_time": { "type": "string", "format": "date-time" },
+    "end_time": { "type": "string", "format": "date-time" },
+    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "category": { "type": "string" },
+    "status": { "type": "string", "enum": ["planned", "in_progress", "completed", "cancelled"] },
+    "location": { "type": "string" },
+    "reminders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "time": { "type": "string", "format": "date-time" },
+          "method": { "type": "string", "enum": ["push", "email", "sms"] }
+        },
+        "required": ["time", "method"]
+      }
+    },
+    "recurrence": {
+      "type": "object",
+      "properties": {
+        "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
+        "interval": { "type": "integer", "minimum": 1 },
+        "end_date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["frequency", "interval"]
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "start_time",
+    "end_time",
+    "status"
+  ],
+  "additionalProperties": false
+}
 """
 
 
@@ -171,55 +172,9 @@ class ChatGPTService:
         )
 
     def call_function(self, name, args):
-        print('args: ', args)
-        if name == "create_schedule":
-            return self.create_schedule(**args)
-
-    async def create_schedule(self, request: str):
-        print("create_schedule request: ", request)
-        response = self.client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": create_schedule_prompt,
-                        }
-                    ]
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": request
-                        }
-                    ]
-                }
-            ],
-            response_format={
-                "type": "json_object"
-            },
-            temperature=1,
-            max_completion_tokens=2048,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
-
-        gpt_response = response.choices[0].message.content
-        print("gpt_response: ", gpt_response)
-
-        daily_plan = DailyPlanModel(
-            title=gpt_response.title,
-            description=gpt_response.description,
-            start_time=gpt_response.start_time,
-            end_time=gpt_response.end_time
-        )
-
-        return gpt_response
+        print('args: ', args, 'name: ', name)
+        if name == "create_task_tool":
+            return {"task": self.create_task_tool(**args)}
 
     def send_message(self, request: ChatGptRequestModel):
         user_message = request.message
@@ -247,27 +202,28 @@ class ChatGPTService:
                     ]
                 }
             ],
-            # tools=[
-            #     {
-            #         "type": "function",
-            #         "function": {
-            #             "name": "create_schedule",
-            #             "description": "Create a schedule for my tasks",
-            #             "parameters": {
-            #                 "type": "object",
-            #                 "properties": {
-            #                     "request": {
-            #                         "type": "string",
-            #                         "description": "The tasks to create schedule for"
-            #                     }
-            #                 },
-            #                 "additionalProperties": False,
-            #                 "required": ["request"]
-            #             },
-            #             "strict": True
-            #         }
-            #     }
-            # ],
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "create_task_tool",
+                        "description": "Create a task",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+
+                                "request": {
+                                    "type": "string",
+                                    "description": "The task to create"
+                                }
+                            },
+                            "additionalProperties": False,
+                            "required": ["request"]
+                        },
+                        "strict": True
+                    }
+                }
+            ],
             response_format={
                 "type": "text"
             },
@@ -288,6 +244,47 @@ class ChatGPTService:
             args = json.loads(tool_call.function.arguments)
             result = self.call_function(name, args)
 
-        print("result: ", result)
+        print("result of tool call: ", result)
 
-        return {"message": result}
+        return result
+
+    def create_task_tool(self, request: str) -> TaskModel:
+        print("create_task request: ", request)
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": create_task_prompt,
+                        }
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": request
+                        }
+                    ]
+                }
+            ],
+            response_format={
+                "type": "json_object"
+            },
+            temperature=0,
+            max_completion_tokens=2048,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+
+        gpt_response_json = response.choices[0].message.content
+        print("gpt_response: ", gpt_response_json)
+
+        task = TaskModel(**json.loads(gpt_response_json))
+
+        return task

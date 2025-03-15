@@ -1,7 +1,10 @@
 from pydantic import BaseModel
 
-from api.schemas.task_model import DayTask
+from api.schemas.task_model import TaskModel
 
 
 class DailyPlanModel(BaseModel):
-    tasks: list[DayTask]
+    tasks: list[TaskModel]
+
+    class Config:
+        arbitrary_types_allowed = True
