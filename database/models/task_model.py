@@ -4,12 +4,7 @@ from database.database import Base
 from datetime import datetime
 import enum
 
-
-class TaskPriority(enum.Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
+from database.models.priority_model import PriorityModel
 
 
 class TaskStatus(enum.Enum):
@@ -42,9 +37,9 @@ class TaskModel(Base):
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
     priority = Column(
-        Enum(TaskPriority),
+        Enum(PriorityModel),
         nullable=True,
-        default=TaskPriority.MEDIUM
+        default=PriorityModel.LOW
     )
     category = Column(String, nullable=True)
     status = Column(
@@ -74,6 +69,15 @@ class TaskModel(Base):
 
     # Отношение к пользователю
     user = relationship("User", back_populates="tasks")
+
+    # Отношения
+    reminders = relationship(
+        "Reminder", back_populates="task", cascade="all, delete-orphan")
+    recurrence = relationship(
+        "Recurrence", back_populates="task", uselist=False, cascade="all, delete-orphan")
+
+    # Добавляем связь
+    smart_tags = relationship("SmartTag", back_populates="task")
 
     def __repr__(self):
         return f"<Task(id={self.id}, title={self.title}, user_id={self.user_id})>"
