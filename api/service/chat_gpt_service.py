@@ -1,8 +1,12 @@
 from datetime import datetime
-from api.schemas.task_model import TaskModel
+from api.schemas.task_schema import TaskSchema
 import json
 from openai import OpenAI
-from api.schemas.chat_gpt_request_model import ChatGptRequestModel
+from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from database.database import get_db
+from database.models.task_model import TaskModel
 
 
 base_prompt = """
@@ -166,17 +170,38 @@ Task(json schema):
 
 
 class ChatGPTService:
-    def __init__(self):
+    def __init__(self, db: AsyncSession = Depends(get_db)):
         self.client = OpenAI(
             api_key="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",
         )
+        self.db = db
 
-    def call_function(self, name, args):
+    async def call_function(self, name, args):
         print('args: ', args, 'name: ', name)
         if name == "create_task_tool":
-            return {"task": self.create_task_tool(**args)}
+            task = self.create_task_tool(**args)
+            print('created task: ', task)
+            # Создаем запись в БД
+            # db_task = TaskModel(
+            #     id=task.id,
+            #     user_id="1",
+            #     title=task.title,
+            #     description=task.description,
+            #     start_time=task.start_time,
+            #     end_time=task.end_time,
+            #     priority=task.priority,
+            #     category=task.category,
+            #     status=task.status,
+            #     location=task.location,
+            # )
 
-    def send_message(self, request: ChatGptRequestModel):
+            # self.db.add(db_task)
+            # await self.db.commit()
+            # await self.db.refresh(db_task)
+
+            return {"task": task}
+
+    async def send_message(self, request: ChatGptRequestSchema):
         user_message = request.message
         print("user_message: ", user_message)
         # Отправка запроса в ChatGPT
@@ -211,7 +236,6 @@ class ChatGPTService:
                         "parameters": {
                             "type": "object",
                             "properties": {
-
                                 "request": {
                                     "type": "string",
                                     "description": "The task to create"
@@ -242,13 +266,13 @@ class ChatGPTService:
         for tool_call in response.choices[0].message.tool_calls:
             name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
-            result = self.call_function(name, args)
+            result = await self.call_function(name, args)
 
         print("result of tool call: ", result)
 
         return result
 
-    def create_task_tool(self, request: str) -> TaskModel:
+    def create_task_tool(self, request: str) -> TaskSchema:
         print("create_task request: ", request)
         response = self.client.chat.completions.create(
             model="gpt-4o",
@@ -285,6 +309,7 @@ class ChatGPTService:
         gpt_response_json = response.choices[0].message.content
         print("gpt_response: ", gpt_response_json)
 
-        task = TaskModel(**json.loads(gpt_response_json))
+        task_data = json.loads(gpt_response_json)
+        task_schema = TaskSchema(**task_data)
 
-        return task
+        return task_schema

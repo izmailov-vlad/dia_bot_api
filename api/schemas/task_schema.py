@@ -2,11 +2,11 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
 
-from api.schemas.recurrence_model import RecurrenceModel
-from api.schemas.reminder_model import ReminderModel
+from api.schemas.recurrence_schema import RecurrenceSchema
+from api.schemas.reminder_schema import ReminderSchema
 
 
-class TaskModel(BaseModel):
+class TaskSchema(BaseModel):
     id: str
     title: str
     description: Optional[str]
@@ -16,8 +16,8 @@ class TaskModel(BaseModel):
     category: Optional[str]
     status: str  # "planned" | "in_progress" | "completed" | "cancelled"
     location: Optional[str]
-    reminders: Optional[List[ReminderModel]]
-    recurrence: Optional[RecurrenceModel]
+    reminders: Optional[List[ReminderSchema]]
+    recurrence: Optional[RecurrenceSchema]
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
