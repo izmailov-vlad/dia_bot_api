@@ -1,20 +1,36 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from typing import Generator
 
-DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/mydatabase"
+DATABASE_URL = "sqlite:///./dia.db"
 
-# Создаем асинхронный движок
-engine = create_async_engine(DATABASE_URL, echo=True)
+# Создаем синхронный движок
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},  # Для SQLite
+    echo=True
+)
 
 # Создаем фабрику сессий
-async_session_maker = sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
 )
 
 # Базовый класс для моделей
 Base = declarative_base()
 
-# Функция для получения сессии
-async def get_db():
-    async with async_session_maker() as session:
-        yield session
+# Dependency для FastAPI
+
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()

@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from openai import OpenAI
+from fastapi import FastAPI
 
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
 from api.service.chat_gpt_service import ChatGPTService
+from database.database import Base, engine
+
+
+# Создаем таблицы
+Base.metadata.create_all(bind=engine)
 
 # Инициализация FastAPI приложения
 app = FastAPI()

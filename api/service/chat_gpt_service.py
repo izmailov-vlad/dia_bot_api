@@ -3,10 +3,6 @@ from api.schemas.task_schema import TaskSchema
 import json
 from openai import OpenAI
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from database.database import get_db
-from database.models.task_model import TaskModel
 
 
 base_prompt = """
@@ -170,11 +166,10 @@ Task(json schema):
 
 
 class ChatGPTService:
-    def __init__(self, db: AsyncSession = Depends(get_db)):
+    def __init__(self):
         self.client = OpenAI(
             api_key="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",
         )
-        self.db = db
 
     async def call_function(self, name, args):
         print('args: ', args, 'name: ', name)
