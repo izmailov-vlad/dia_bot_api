@@ -9,7 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import Enum
 
 
 # revision identifiers, used by Alembic.
@@ -20,21 +19,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Создаем enum типы
-    task_status = sa.Enum(
-        'planned',
-        'in_progress',
-        'completed',
-        'cancelled',
-        name='taskstatus',
-    )
-    task_priority = sa.Enum(
-        'low',
-        'medium',
-        'high',
-        'critical',
-        name='taskpriority',
-    )
 
     # Создаем таблицу tasks
     op.create_table(
@@ -44,10 +28,6 @@ def upgrade() -> None:
         sa.Column('description', sa.String(), nullable=True),
         sa.Column('start_time', sa.DateTime(), nullable=False),
         sa.Column('end_time', sa.DateTime(), nullable=False),
-        sa.Column('priority', task_priority, nullable=True, default='low'),
-        sa.Column('category', sa.String(), nullable=True),
-        sa.Column('status', task_status, nullable=False, default='planned'),
-        sa.Column('location', sa.String(), nullable=True),
         sa.Column(
             'created_at',
             sa.DateTime(),
@@ -67,7 +47,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Удаляем таблицу
     op.drop_table('tasks')
-
-    # Удаляем enum типы
-    op.execute('DROP TYPE taskstatus')
-    op.execute('DROP TYPE taskpriority')
