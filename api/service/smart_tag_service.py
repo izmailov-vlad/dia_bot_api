@@ -39,9 +39,9 @@ class SmartTagService:
         """Получение умного тега по ID"""
         return self.db.query(SmartTagModel).filter(SmartTagModel.id == tag_id).first()
 
-    def get_all_smart_tags(self) -> List[SmartTagSchemaResponse]:
-        """Получение всех умных тегов"""
-        return self.db.query(SmartTagModel).all()
+    def get_all_smart_tags_by_user_id(self, user_id: str) -> List[SmartTagSchemaResponse]:
+        """Получение всех умных тегов по user_id"""
+        return self.db.query(SmartTagModel).filter(SmartTagModel.user_id == user_id).all()
 
     def get_system_tags(self) -> List[SmartTagSchemaResponse]:
         """Получение всех системных тегов"""
@@ -57,7 +57,8 @@ class SmartTagService:
         update_data: Dict[str, Any]
     ) -> Optional[SmartTagSchemaResponse]:
         """Обновление умного тега"""
-        tag = self.get_smart_tag_by_id(tag_id)
+        tag = self.db.query(SmartTagModel).filter(
+            SmartTagModel.id == tag_id).first()
         if not tag:
             return None
 
@@ -74,7 +75,8 @@ class SmartTagService:
 
     def delete_smart_tag(self, tag_id: str) -> bool:
         """Удаление умного тега"""
-        tag = self.get_smart_tag_by_id(tag_id)
+        tag = self.db.query(SmartTagModel).filter(
+            SmartTagModel.id == tag_id).first()
         if not tag:
             return False
 

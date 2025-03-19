@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes.gpt_routes import router as gpt_router
 from api.routes.task_routes import router as task_router
+from api.routes.smart_tag_routes import router as smart_tag_router
 from database.database import Base, engine
 
 
@@ -24,6 +25,7 @@ app.add_middleware(
 # Подключаем роуты
 app.include_router(gpt_router, prefix="/api")
 app.include_router(task_router, prefix="/api")
+app.include_router(smart_tag_router, prefix="/api")
 
 # Точка входа для запуска приложения (если требуется запуск локально)
 if __name__ == "__main__":
