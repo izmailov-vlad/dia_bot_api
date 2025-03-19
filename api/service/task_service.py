@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 
+from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from database.models.task.task_model import TaskModel
 
@@ -16,17 +17,17 @@ class TaskService:
 
     async def create_task(
         self,
-        taskSchema: TaskSchemaResponse,
-    ) -> TaskModel:
+        task: TaskSchemaCreate,
+    ) -> TaskSchemaResponse:
         """Создать новую задачу"""
 
         task_id = str(uuid4())
         task = TaskModel(
             id=task_id,
-            title=taskSchema.title,
-            description=taskSchema.description,
-            start_time=taskSchema.start_time,
-            end_time=taskSchema.end_time,
+            title=task.title,
+            description=task.description,
+            start_time=task.start_time,
+            end_time=task.end_time,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -35,25 +36,45 @@ class TaskService:
         await self.db_session.commit()
         await self.db_session.refresh(task)
 
-        return task
+        return TaskSchemaResponse(
+            id=task_id,
+            title=task.title,
+            description=task.description,
+            start_time=task.start_time,
+            end_time=task.end_time
+        )
 
-    async def get_task_by_id(self, task_id: str) -> Optional[TaskModel]:
+    async def get_task_by_id(self, task_id: str) -> Optional[TaskSchemaResponse]:
         """Получить задачу по ID"""
 
         query = select(TaskModel).where(TaskModel.id == task_id)
         result = await self.db_session.execute(query)
         task = result.scalars().first()
 
-        return task
+        return TaskSchemaResponse(
+            id=task_id,
+            title=task.title,
+            description=task.description,
+            start_time=task.start_time,
+            end_time=task.end_time
+        )
 
-    async def get_all_tasks(self) -> List[TaskModel]:
+    async def get_all_tasks(self) -> List[TaskSchemaResponse]:
         """Получить все задачи"""
 
         query = select(TaskModel)
         result = await self.db_session.execute(query)
         tasks = result.scalars().all()
 
-        return list(tasks)
+        return [
+            TaskSchemaResponse(
+                id=task.id,
+                title=task.title,
+                description=task.description,
+                start_time=task.start_time,
+                end_time=task.end_time
+            ) for task in tasks
+        ]
 
     async def update_task(
         self,
@@ -62,7 +83,7 @@ class TaskService:
         description: Optional[str] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-    ) -> Optional[TaskModel]:
+    ) -> Optional[TaskSchemaResponse]:
         """Обновить задачу"""
 
         task = await self.get_task_by_id(task_id)
@@ -83,10 +104,19 @@ class TaskService:
 
         query = update(TaskModel).where(
             TaskModel.id == task_id).values(**update_data)
+
         await self.db_session.execute(query)
         await self.db_session.commit()
 
-        return await self.get_task_by_id(task_id)
+        task = await self.get_task_by_id(task_id)
+
+        return TaskSchemaResponse(
+            id=task.id,
+            title=task.title,
+            description=task.description,
+            start_time=task.start_time,
+            end_time=task.end_time
+        )
 
     async def delete_task(self, task_id: str) -> bool:
         """Удалить задачу"""
@@ -101,7 +131,7 @@ class TaskService:
 
         return True
 
-    async def get_tasks_by_date_range(self, start_date: datetime, end_date: datetime) -> List[TaskModel]:
+    async def get_tasks_by_date_range(self, start_date: datetime, end_date: datetime) -> List[TaskSchemaResponse]:
         """Получить задачи в заданном временном диапазоне"""
 
         query = select(TaskModel).where(
@@ -111,4 +141,12 @@ class TaskService:
         result = await self.db_session.execute(query)
         tasks = result.scalars().all()
 
-        return list(tasks)
+        return [
+            TaskSchemaResponse(
+                id=task.id,
+                title=task.title,
+                description=task.description,
+                start_time=task.start_time,
+                end_time=task.end_time
+            ) for task in tasks
+        ]
