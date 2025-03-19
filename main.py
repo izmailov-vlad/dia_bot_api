@@ -1,7 +1,8 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
-from api.service.chat_gpt_service import ChatGPTService
+from api.routes.gpt_routes import router as gpt_router
+from api.routes.task_routes import router as task_router
 from database.database import Base, engine
 
 
@@ -9,19 +10,20 @@ from database.database import Base, engine
 Base.metadata.create_all(bind=engine)
 
 # Инициализация FastAPI приложения
-app = FastAPI()
+app = FastAPI(title="Task Management API")
 
+# Настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.post("/api/gpt")
-async def send_message(chat_request: ChatGptRequestSchema):
-    try:
-        response = await ChatGPTService().send_message(chat_request)
-
-        return response
-
-    except Exception as e:
-        print("Error: ", e)
-
+# Подключаем роуты
+app.include_router(gpt_router, prefix="/api")
+app.include_router(task_router, prefix="/api")
 
 # Точка входа для запуска приложения (если требуется запуск локально)
 if __name__ == "__main__":

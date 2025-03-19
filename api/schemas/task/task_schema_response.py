@@ -3,8 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
-
-class TaskSchema(BaseModel):
+class TaskSchemaResponse(BaseModel):
     id: str
     title: str
     description: Optional[str]

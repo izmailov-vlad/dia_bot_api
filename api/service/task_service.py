@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 
-from api.schemas.task.task_schema import TaskSchema
+from api.schemas.task.task_schema_response import TaskSchemaResponse
 from database.models.task.task_model import TaskModel
 
 
@@ -16,7 +16,7 @@ class TaskService:
 
     async def create_task(
         self,
-        taskSchema: TaskSchema,
+        taskSchema: TaskSchemaResponse,
     ) -> TaskModel:
         """Создать новую задачу"""
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from api.schemas.task.task_schema import TaskSchema
+from api.schemas.task.task_schema_response import TaskSchemaResponse
 import json
 from openai import OpenAI
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
@@ -250,7 +250,7 @@ class ChatGPTService:
 
         return result
 
-    def create_task_tool(self, request: str) -> TaskSchema:
+    def create_task_tool(self, request: str) -> TaskSchemaResponse:
         print("create_task request: ", request)
         response = self.client.chat.completions.create(
             model="gpt-4o",
@@ -288,6 +288,6 @@ class ChatGPTService:
         print("gpt_response: ", gpt_response_json)
 
         task_data = json.loads(gpt_response_json)
-        task_schema = TaskSchema(**task_data)
+        task_schema = TaskSchemaResponse(**task_data)
 
         return task_schema
