@@ -1,5 +1,5 @@
 from datetime import datetime
-from api.schemas.task_schema import TaskSchema
+from api.schemas.task.task_schema import TaskSchema
 import json
 from openai import OpenAI
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
@@ -176,23 +176,6 @@ class ChatGPTService:
         if name == "create_task_tool":
             task = self.create_task_tool(**args)
             print('created task: ', task)
-            # Создаем запись в БД
-            # db_task = TaskModel(
-            #     id=task.id,
-            #     user_id="1",
-            #     title=task.title,
-            #     description=task.description,
-            #     start_time=task.start_time,
-            #     end_time=task.end_time,
-            #     priority=task.priority,
-            #     category=task.category,
-            #     status=task.status,
-            #     location=task.location,
-            # )
-
-            # self.db.add(db_task)
-            # await self.db.commit()
-            # await self.db.refresh(db_task)
 
             return {"task": task}
 
