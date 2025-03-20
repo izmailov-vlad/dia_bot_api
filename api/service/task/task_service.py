@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
@@ -8,12 +9,56 @@ from sqlalchemy import update, delete
 
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
+from api.service.task import create_task_prompt
 from database.models.task.task_model import TaskModel
+
+from openai import OpenAI
 
 
 class TaskService:
-    def __init__(self, db_session: AsyncSession):
+    def __init__(self, db_session: AsyncSession, client: OpenAI):
         self.db_session = db_session
+        self.client = client
+
+    async def create_task_gpt(self, request: str) -> TaskSchemaResponse:
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": create_task_prompt,
+                        }
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": request
+                        }
+                    ]
+                }
+            ],
+            response_format={
+                "type": "json_object"
+            },
+            temperature=0,
+            max_completion_tokens=2048,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+
+        gpt_response_json = response.choices[0].message.content
+
+        task_data = json.loads(gpt_response_json)
+        task_schema = TaskSchemaResponse(**task_data)
+
+        return task_schema
 
     async def create_task(
         self,

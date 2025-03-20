@@ -8,7 +8,7 @@ from api.schemas.smart_tag.smart_tag_schema_response import SmartTagSchemaRespon
 from api.schemas.smart_tag.smart_tag_schema_update import SmartTagSchemaUpdate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.service.smart_tag_service import SmartTagService
-from api.service.task_service import TaskService
+from api.service.task.task_service import TaskService
 from dependencies import get_smart_tag_service, get_task_service
 
 
