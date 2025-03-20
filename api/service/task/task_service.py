@@ -9,6 +9,7 @@ from sqlalchemy import update, delete
 
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
+from api.schemas.task.task_schema_response_gpt import TaskSchemaResponseGpt
 from api.service.task import create_task_prompt
 from database.models.task.task_model import TaskModel
 
@@ -20,7 +21,7 @@ class TaskService:
         self.db_session = db_session
         self.client = client
 
-    async def create_task_gpt(self, request: str) -> TaskSchemaResponse:
+    async def create_task_gpt(self, request: str) -> TaskSchemaResponseGpt:
         response = self.client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -55,10 +56,10 @@ class TaskService:
 
         gpt_response_json = response.choices[0].message.content
 
-        task_data = json.loads(gpt_response_json)
-        task_schema = TaskSchemaResponse(**task_data)
+        task_gpt_data = json.loads(gpt_response_json)
+        task_schema_response_gpt = TaskSchemaResponseGpt(**task_gpt_data)
 
-        return task_schema
+        return task_schema_response_gpt
 
     async def create_task(
         self,

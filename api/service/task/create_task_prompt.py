@@ -14,42 +14,14 @@ Task(json schema):
   "title": "Task",
   "type": "object",
   "properties": {
-    "id": { "type": "string" },
-    "title": { "type": "string" },
-    "description": { "type": "string" },
+    "title": { "type": "string" },  
     "start_time": { "type": "string", "format": "date-time" },
     "end_time": { "type": "string", "format": "date-time" },
-    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
-    "category": { "type": "string" },
-    "status": { "type": "string", "enum": ["planned", "in_progress", "completed", "cancelled"] },
-    "location": { "type": "string" },
-    "reminders": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "time": { "type": "string", "format": "date-time" },
-          "method": { "type": "string", "enum": ["push", "email", "sms"] }
-        },
-        "required": ["time", "method"]
-      }
-    },
-    "recurrence": {
-      "type": "object",
-      "properties": {
-        "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
-        "interval": { "type": "integer", "minimum": 1 },
-        "end_date": { "type": "string", "format": "date-time" }
-      },
-      "required": ["frequency", "interval"]
-    }
   },
   "required": [
-    "id",
     "title",
     "start_time",
     "end_time",
-    "status"
   ],
   "additionalProperties": false
 }
