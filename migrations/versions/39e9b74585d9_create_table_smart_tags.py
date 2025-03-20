@@ -27,16 +27,20 @@ def upgrade() -> None:
             'CURRENT_TIMESTAMP'), nullable=False),
         sa.Column('updated_at', sa.DateTime(), server_default=sa.text(
             'CURRENT_TIMESTAMP'), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('user_id', sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'])
     )
 
-    # Создаем индекс для поиска по имени
+    # Создаем индексы
     op.create_index('ix_smart_tags_name', 'smart_tags', ['name'])
+    op.create_index('ix_smart_tags_user_id', 'smart_tags', ['user_id'])
 
 
 def downgrade() -> None:
-    # Удаляем индекс
+    # Удаляем индексы
     op.drop_index('ix_smart_tags_name')
+    op.drop_index('ix_smart_tags_user_id')
 
     # Удаляем таблицу
     op.drop_table('smart_tags')

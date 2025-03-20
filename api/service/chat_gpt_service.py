@@ -3,6 +3,8 @@ from api.schemas.task.task_schema_response import TaskSchemaResponse
 import json
 from openai import OpenAI
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
+from api.service.smart_tag_service import SmartTagService
+from api.service.task_service import TaskService
 
 
 base_prompt = """
@@ -170,6 +172,8 @@ class ChatGPTService:
         self.client = OpenAI(
             api_key="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",
         )
+        self.task_service = TaskService()
+        self.smart_tag_service = SmartTagService()
 
     async def call_function(self, name, args):
         print('args: ', args, 'name: ', name)

@@ -8,7 +8,6 @@ class TaskModel(Base):
     __tablename__ = "tasks"
 
     id = Column(String, primary_key=True)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     start_time = Column(DateTime, nullable=False)
@@ -24,12 +23,11 @@ class TaskModel(Base):
         default=datetime.now,
         onupdate=datetime.now
     )
-
-    # Отношение к пользователю
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="tasks")
 
-    # Добавляем связь
-    smart_tags = relationship("SmartTag", back_populates="task")
+    smart_tag_id = Column(String, ForeignKey('smart_tags.id'), nullable=True)
+    smart_tag = relationship("SmartTagModel", back_populates="tasks")
 
     def __repr__(self):
         return f"<Task(id={self.id}, title={self.title}, user_id={self.user_id})>"
