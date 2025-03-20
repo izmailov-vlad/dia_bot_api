@@ -23,8 +23,8 @@ class TaskModel(Base):
         default=datetime.now,
         onupdate=datetime.now
     )
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    user = relationship("User", back_populates="tasks")
+    # user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    # user = relationship("User", back_populates="tasks")
 
     smart_tag_id = Column(String, ForeignKey('smart_tags.id'), nullable=True)
     smart_tag = relationship("SmartTagModel", back_populates="tasks")

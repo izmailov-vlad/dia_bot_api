@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 from api.routes.gpt_routes import router as gpt_router
 from api.routes.task_routes import router as task_router
@@ -9,6 +10,16 @@ from database.database import Base, engine
 
 # Создаем таблицы
 Base.metadata.create_all(bind=engine)
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.DEBUG,  # Для продакшена используйте logging.INFO или logging.WARNING
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("debug.log"),
+        logging.StreamHandler()
+    ]
+)
 
 # Инициализация FastAPI приложения
 app = FastAPI(title="Task Management API")

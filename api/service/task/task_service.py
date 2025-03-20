@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
@@ -10,56 +11,77 @@ from sqlalchemy import update, delete
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.schemas.task.task_schema_response_gpt import TaskSchemaResponseGpt
-from api.service.task import create_task_prompt
+from api.service.task.create_task_prompt import create_task_prompt
 from database.models.task.task_model import TaskModel
-
+from sqlalchemy.orm import Session
 from openai import OpenAI
+
+# Настраиваем логгер для этого модуля
+logger = logging.getLogger(__name__)
 
 
 class TaskService:
-    def __init__(self, db_session: AsyncSession, client: OpenAI):
+    def __init__(self, db_session: Session, client: OpenAI):
         self.db_session = db_session
         self.client = client
 
     async def create_task_gpt(self, request: str) -> TaskSchemaResponseGpt:
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": create_task_prompt,
-                        }
-                    ]
+        logger.debug(f"Начало создания задачи через GPT с запросом: {request}")
+
+        try:
+            logger.debug("Отправка запроса к модели GPT-4o")
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": create_task_prompt,
+                            }
+                        ]
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": request
+                            }
+                        ]
+                    }
+                ],
+                response_format={
+                    "type": "json_object"
                 },
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": request
-                        }
-                    ]
-                }
-            ],
-            response_format={
-                "type": "json_object"
-            },
-            temperature=0,
-            max_completion_tokens=2048,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
+                temperature=0,
+                max_completion_tokens=2048,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0
+            )
 
-        gpt_response_json = response.choices[0].message.content
+            logger.debug(f"Получен ответ от GPT: {response}")
+            gpt_response_json = response.choices[0].message.content
+            logger.debug(f"JSON ответ от GPT: {gpt_response_json}")
 
-        task_gpt_data = json.loads(gpt_response_json)
-        task_schema_response_gpt = TaskSchemaResponseGpt(**task_gpt_data)
+            task_gpt_data = json.loads(gpt_response_json)
+            logger.debug(f"Распарсенные данные задачи: {task_gpt_data}")
 
-        return task_schema_response_gpt
+            task_schema_response_gpt = TaskSchemaResponseGpt(**task_gpt_data)
+            logger.debug(
+                f"Создан объект TaskSchemaResponseGpt: {task_schema_response_gpt}")
+
+            return task_schema_response_gpt
+        except json.JSONDecodeError as e:
+            logger.error(f"Ошибка при парсинге JSON ответа от GPT: {str(e)}")
+            logger.error(f"Невалидный JSON: {gpt_response_json}")
+            raise
+        except Exception as e:
+            logger.error(
+                f"Ошибка при создании задачи через GPT: {str(e)}", exc_info=True)
+            raise
 
     async def create_task(
         self,
@@ -79,8 +101,8 @@ class TaskService:
         )
 
         self.db_session.add(task)
-        await self.db_session.commit()
-        await self.db_session.refresh(task)
+        self.db_session.commit()
+        self.db_session.refresh(task)
 
         return TaskSchemaResponse(
             id=task_id,

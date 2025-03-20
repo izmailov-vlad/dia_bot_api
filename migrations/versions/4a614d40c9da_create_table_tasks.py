@@ -40,21 +40,17 @@ def upgrade() -> None:
             server_default=sa.text('CURRENT_TIMESTAMP'),
             nullable=False,
         ),
-        sa.Column('user_id', sa.String(), nullable=False),
         sa.Column('smart_tag_id', sa.String(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id']),
         sa.ForeignKeyConstraint(['smart_tag_id'], ['smart_tags.id'])
     )
 
     # Создаем индексы для ускорения поиска по внешним ключам
-    op.create_index('ix_tasks_user_id', 'tasks', ['user_id'])
     op.create_index('ix_tasks_smart_tag_id', 'tasks', ['smart_tag_id'])
 
 
 def downgrade() -> None:
     # Удаляем индексы
-    op.drop_index('ix_tasks_user_id', table_name='tasks')
     op.drop_index('ix_tasks_smart_tag_id', table_name='tasks')
 
     # Удаляем таблицу
