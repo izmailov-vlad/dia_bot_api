@@ -6,14 +6,21 @@ from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.schemas.task.task_schema_update import TaskSchemaUpdate
 from dependencies import get_task_service
+from api.middleware.auth_middleware import get_current_user
+from database.models.user.user_model import User
 
 router = APIRouter(tags=["tasks"])
 
 
 @router.post("/tasks", response_model=TaskSchemaResponse)
-async def create_task(task: TaskSchemaCreate, task_service: TaskService = Depends(get_task_service)):
+def create_task(
+    task: TaskSchemaCreate,
+    current_user: User = Depends(get_current_user),
+    task_service: TaskService = Depends(get_task_service)
+):
     """Создание новой задачи"""
-    return await task_service.create_task(task)
+    # Здесь мы можем установить task.user_id = current_user.id
+    return task_service.create_task(task)
 
 
 @router.get("/tasks/{task_id}", response_model=TaskSchemaResponse)

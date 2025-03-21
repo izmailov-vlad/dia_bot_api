@@ -21,10 +21,13 @@ class User(Base):
         default=datetime.now,
         onupdate=datetime.now
     )
+    password_hash = Column(String, nullable=True)
 
     # Определение отношений
     tasks = relationship("TaskModel", back_populates="user")
     smart_tags = relationship("SmartTagModel", back_populates="user")
+    refresh_tokens = relationship(
+        "RefreshToken", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username}, telegram_id={self.telegram_id})>"
