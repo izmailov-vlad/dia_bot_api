@@ -9,8 +9,8 @@ class RefreshToken(Base):
 
     id = Column(String, primary_key=True)
     token = Column(String, nullable=False, unique=True)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
 
-    user = relationship("User", back_populates="refresh_tokens")
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user = relationship("UserModel", back_populates="refresh_tokens")

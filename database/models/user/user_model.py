@@ -4,7 +4,7 @@ from database.database import Base
 from datetime import datetime
 
 
-class User(Base):
+class UserModel(Base):
     __tablename__ = "users"
 
     id = Column(String, primary_key=True)
@@ -21,7 +21,6 @@ class User(Base):
         default=datetime.now,
         onupdate=datetime.now
     )
-    password_hash = Column(String, nullable=True)
 
     # Определение отношений
     tasks = relationship("TaskModel", back_populates="user")

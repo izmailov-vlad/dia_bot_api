@@ -45,6 +45,3 @@ def downgrade() -> None:
     
     # Удаляем таблицу refresh_tokens
     op.drop_table('refresh_tokens')
-    
-    # Удаляем колонку password_hash из таблицы users
-    op.drop_column('users', 'password_hash')

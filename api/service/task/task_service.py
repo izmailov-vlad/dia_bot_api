@@ -17,7 +17,7 @@ from database.models.task.task_model import TaskModel
 from sqlalchemy.orm import Session
 from openai import OpenAI
 
-from database.models.user.user_model import User
+from database.models.user.user_model import UserModel
 
 # Настраиваем логгер для этого модуля
 logger = logging.getLogger(__name__)

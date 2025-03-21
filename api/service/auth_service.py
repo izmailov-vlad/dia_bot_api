@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from uuid import uuid4
 
-from database.models.user.user_model import User
+from database.models.user.user_model import UserModel
 from database.models.token_model import RefreshToken
 from api.schemas.token.token_schema import TokenSchema, TokenPayload
 
@@ -28,14 +28,10 @@ class AuthService:
         """Проверка пароля"""
         return pwd_context.verify(plain_password, hashed_password)
 
-    def get_password_hash(self, password: str) -> str:
-        """Хеширование пароля"""
-        return pwd_context.hash(password)
-
-    def authenticate_user(self, telegram_id: str) -> Optional[User]:
+    def authenticate_user(self, telegram_id: str) -> Optional[UserModel]:
         """Аутентификация пользователя по telegram_id"""
-        user = self.db_session.query(User).filter(
-            User.telegram_id == telegram_id).first()
+        user = self.db_session.query(UserModel).filter(
+            UserModel.telegram_id == telegram_id).first()
         return user
 
     def create_access_token(self, user_id: str) -> str:

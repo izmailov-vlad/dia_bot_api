@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
 
 from database.database import get_db
-from database.models.user.user_model import User
+from database.models.user.user_model import UserModel
 from api.schemas.user.user_schema_request_create import UserSchemaRequestCreate
 from api.schemas.user.user_schema_response import UserSchemaResponse
 from api.schemas.user.user_schmea_request_update import UserSchemaRequestUpdate
@@ -31,8 +31,8 @@ class UserService:
             HTTPException: Если пользователь с таким telegram_id уже существует
         """
         # Проверяем, существует ли пользователь с таким telegram_id
-        existing_user = self.db_session.query(User).filter(
-            User.telegram_id == user_data.telegram_id).first()
+        existing_user = self.db_session.query(UserModel).filter(
+            UserModel.telegram_id == user_data.telegram_id).first()
 
         if existing_user:
             raise HTTPException(
@@ -41,7 +41,7 @@ class UserService:
             )
 
         # Создаем нового пользователя
-        user = User(
+        user = UserModel(
             id=str(uuid4()),
             telegram_id=user_data.telegram_id,
             username=user_data.username,
@@ -70,7 +70,8 @@ class UserService:
             HTTPException: Если при обновлении возникают конфликты (например, telegram_id уже занят)
         """
         # Проверяем существование пользователя
-        user = self.db_session.query(User).filter(User.id == user_id).first()
+        user = self.db_session.query(UserModel).filter(
+            UserModel.id == user_id).first()
         if not user:
             return None
 
@@ -79,9 +80,9 @@ class UserService:
 
         # Если изменяется telegram_id, проверяем его уникальность
         if "telegram_id" in update_data:
-            existing_user = self.db_session.query(User).filter(
-                User.telegram_id == update_data["telegram_id"],
-                User.id != user_id
+            existing_user = self.db_session.query(UserModel).filter(
+                UserModel.telegram_id == update_data["telegram_id"],
+                UserModel.id != user_id
             ).first()
 
             if existing_user:
@@ -114,7 +115,8 @@ class UserService:
             bool: True если пользователь был удален, False если пользователь не найден
         """
         # Проверяем существование пользователя
-        user = self.db_session.query(User).filter(User.id == user_id).first()
+        user = self.db_session.query(UserModel).filter(
+            UserModel.id == user_id).first()
         if not user:
             return False
 
@@ -138,7 +140,8 @@ class UserService:
             HTTPException: Если пользователь не найден
         """
         # Проверяем существование пользователя
-        user = self.db_session.query(User).filter(User.id == user_id).first()
+        user = self.db_session.query(UserModel).filter(
+            UserModel.id == user_id).first()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
