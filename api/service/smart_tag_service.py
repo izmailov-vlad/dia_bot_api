@@ -43,14 +43,6 @@ class SmartTagService:
         """Получение всех умных тегов по user_id"""
         return self.db.query(SmartTagModel).filter(SmartTagModel.user_id == user_id).all()
 
-    def get_system_tags(self) -> List[SmartTagSchemaResponse]:
-        """Получение всех системных тегов"""
-        return self.db.query(SmartTagModel).filter(SmartTagModel.is_system == True).all()
-
-    def get_user_tags(self) -> List[SmartTagSchemaResponse]:
-        """Получение всех пользовательских тегов"""
-        return self.db.query(SmartTagModel).filter(SmartTagModel.is_system == False).all()
-
     def update_smart_tag(
         self,
         tag_id: str,

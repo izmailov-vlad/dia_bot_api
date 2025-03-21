@@ -4,6 +4,7 @@ from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
 
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
@@ -15,6 +16,8 @@ from api.service.task.create_task_prompt import create_task_prompt
 from database.models.task.task_model import TaskModel
 from sqlalchemy.orm import Session
 from openai import OpenAI
+
+from database.models.user.user_model import User
 
 # Настраиваем логгер для этого модуля
 logger = logging.getLogger(__name__)
