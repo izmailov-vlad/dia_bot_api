@@ -1,10 +1,12 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from uuid import uuid4
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from api.schemas.smart_tag.smart_tag_schema_create import SmartTagSchemaCreate
 from api.schemas.smart_tag.smart_tag_schema_response import SmartTagSchemaResponse
+from database.database import get_db
 from database.models.smart_tag.smart_tag_model import SmartTagModel
 
 
@@ -76,3 +78,10 @@ class SmartTagService:
         self.db.commit()
 
         return True
+
+
+def get_smart_tag_service(db: Session = Depends(get_db)) -> SmartTagService:
+    """
+    Зависимость для получения SmartTag сервиса
+    """
+    return SmartTagService(db)

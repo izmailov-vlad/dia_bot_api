@@ -4,7 +4,7 @@ from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
 
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
@@ -13,11 +13,13 @@ from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.schemas.task.task_schema_response_gpt import TaskSchemaResponseGpt
 from api.service.task.create_task_prompt import create_task_prompt
+from database.database import get_db
 from database.models.task.task_model import TaskModel
 from sqlalchemy.orm import Session
 from openai import OpenAI
 
 from database.models.user.user_model import UserModel
+from dependencies import get_open_ai_client
 
 # Настраиваем логгер для этого модуля
 logger = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ class TaskService:
         self.db_session = db_session
         self.client = client
 
-    async def create_task_gpt(self, request: str) -> TaskSchemaResponseGpt:
+    async def generate_task_gpt(self, request: str) -> TaskSchemaResponseGpt:
         logger.debug(f"Начало создания задачи через GPT с запросом: {request}")
 
         try:
@@ -217,3 +219,10 @@ class TaskService:
                 end_time=task.end_time
             ) for task in tasks
         ]
+
+
+def get_task_service(db: Session = Depends(get_db)) -> TaskService:
+    """
+    Зависимость для получения Task сервиса
+    """
+    return TaskService(db, get_open_ai_client())
