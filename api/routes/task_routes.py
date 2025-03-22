@@ -30,9 +30,13 @@ async def create_task(
 
 
 @router.get("/tasks/{task_id}", response_model=TaskSchemaResponse)
-async def get_task(task_id: str, task_repository: TaskRepository = Depends(get_task_repository)):
+async def get_task(
+    task_id: str,
+    task_repository: TaskRepository = Depends(get_task_repository),
+    current_user: UserModel = Depends(get_current_user)
+):
     """Получение задачи по ID"""
-    return await task_repository.get_task_by_id(task_id)
+    return await task_repository.get_task_by_id(task_id, current_user.id)
 
 
 @router.get("/tasks", response_model=List[TaskSchemaResponse])

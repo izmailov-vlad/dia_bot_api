@@ -67,7 +67,7 @@ class TaskRepository:
         """
         return await self.task_service.create_task(task, user_id)
 
-    async def get_task_by_id(self, task_id: str) -> Optional[TaskSchemaResponse]:
+    async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskSchemaResponse]:
         """
         Получает задачу по ID
 
@@ -77,7 +77,7 @@ class TaskRepository:
         Returns:
             Optional[TaskSchemaResponse]: Найденная задача или None
         """
-        return await self.task_service.get_task_by_id(task_id)
+        return await self.task_service.get_task_by_id(task_id, user_id)
 
     async def get_all_tasks(self, user_id: str) -> List[TaskSchemaResponse]:
         """

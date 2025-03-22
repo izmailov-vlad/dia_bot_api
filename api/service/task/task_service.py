@@ -124,33 +124,17 @@ class TaskService:
 
     async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskSchemaResponse]:
         """Получить задачу по ID"""
-        logger.debug(f"=== НАЧАЛО ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID ===")
-        logger.debug(
-            f"Параметры запроса: task_id={task_id}, user_id={user_id}")
 
         try:
-            logger.debug(f"Формирование SQL-запроса для поиска задачи")
             query = select(TaskModel).where(
                 TaskModel.id == task_id,
                 TaskModel.user_id == user_id,
             )
-            logger.debug(f"SQL-запрос сформирован: {query}")
-
-            logger.debug(f"Выполнение запроса к БД")
             result = self.db_session.execute(query)
-            logger.debug(f"Запрос к БД выполнен успешно")
-
             task = result.scalars().first()
 
             if task is None:
-                logger.warning(
-                    f"Задача с ID={task_id} для пользователя ID={user_id} не найдена")
-                logger.debug(
-                    f"=== ЗАВЕРШЕНИЕ ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID (НЕ НАЙДЕНА) ===")
                 return None
-
-            logger.debug(f"Задача найдена: ID={task.id}, title='{task.title}'")
-            logger.debug(f"Создание объекта ответа TaskSchemaResponse")
 
             response = TaskSchemaResponse(
                 id=task.id,
@@ -159,10 +143,6 @@ class TaskService:
                 start_time=task.start_time,
                 end_time=task.end_time
             )
-
-            logger.debug(f"Объект ответа создан успешно")
-            logger.debug(
-                f"=== ЗАВЕРШЕНИЕ ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID (УСПЕШНО) ===")
 
             return response
 
