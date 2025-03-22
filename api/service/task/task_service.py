@@ -198,8 +198,8 @@ class TaskService:
         query = update(TaskModel).where(
             TaskModel.id == task_id).values(**update_data)
 
-        await self.db_session.execute(query)
-        await self.db_session.commit()
+        self.db_session.execute(query)
+        self.db_session.commit()
 
         task = await self.get_task_by_id(task_id)
 
@@ -211,16 +211,17 @@ class TaskService:
             end_time=task.end_time
         )
 
-    async def delete_task(self, task_id: str) -> bool:
+    async def delete_task(self, task_id: str, user_id: str) -> bool:
         """Удалить задачу"""
 
         task = await self.get_task_by_id(task_id)
         if not task:
             return False
 
-        query = delete(TaskModel).where(TaskModel.id == task_id)
-        await self.db_session.execute(query)
-        await self.db_session.commit()
+        query = delete(TaskModel).where(
+            TaskModel.id == task_id, TaskModel.user_id == user_id)
+        self.db_session.execute(query)
+        self.db_session.commit()
 
         return True
 
@@ -231,7 +232,7 @@ class TaskService:
             TaskModel.start_time >= start_date,
             TaskModel.end_time <= end_date
         )
-        result = await self.db_session.execute(query)
+        result = self.db_session.execute(query)
         tasks = result.scalars().all()
 
         return [

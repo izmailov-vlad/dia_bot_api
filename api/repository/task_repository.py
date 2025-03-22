@@ -112,7 +112,7 @@ class TaskRepository:
             task_id, title, description, start_time, end_time
         )
 
-    async def delete_task(self, task_id: str) -> bool:
+    async def delete_task(self, task_id: str, user_id: str) -> bool:
         """
         Удаляет задачу
 
@@ -122,7 +122,7 @@ class TaskRepository:
         Returns:
             bool: True, если задача успешно удалена, иначе False
         """
-        return await self.task_service.delete_task(task_id)
+        return await self.task_service.delete_task(task_id, user_id)
 
     async def get_tasks_by_date_range(
         self, start_date: datetime, end_date: datetime

@@ -51,6 +51,10 @@ async def update_task(task_id: str, task: TaskSchemaUpdate, task_repository: Tas
 
 
 @router.delete("/tasks/{task_id}", response_model=dict)
-async def delete_task(task_id: str, task_repository: TaskRepository = Depends(get_task_repository)):
+async def delete_task(
+    task_id: str,
+    current_user: UserModel = Depends(get_current_user),
+    task_repository: TaskRepository = Depends(get_task_repository)
+):
     """Удаление задачи"""
-    return await task_repository.delete_task(task_id)
+    return await task_repository.delete_task(task_id, current_user.id)
