@@ -20,7 +20,7 @@ def create_task(
 ):
     """Создание новой задачи"""
     # Здесь мы можем установить task.user_id = current_user.id
-    return task_service.create_task(task)
+    return task_service.create_task(task, current_user.id)
 
 
 @router.get("/tasks/{task_id}", response_model=TaskSchemaResponse)
