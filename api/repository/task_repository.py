@@ -41,6 +41,18 @@ class TaskRepository:
         """
         return await self.task_service.generate_task_gpt(request)
 
+    async def create_task_gpt(self, request: str, user_id: str) -> TaskSchemaResponse:
+        """
+        Создаёт задачу с помощью GPT
+        """
+        gpt_task = await self.task_service.generate_task_gpt(request)
+        task_data = TaskSchemaCreate(
+            title=gpt_task.title,
+            start_time=gpt_task.start_time,
+            end_time=gpt_task.end_time
+        )
+        return await self.task_service.create_task(task=task_data, user_id=user_id)
+
     async def create_task(self, task: TaskSchemaCreate, user_id: str) -> TaskSchemaResponse:
         """
         Создаёт новую задачу
