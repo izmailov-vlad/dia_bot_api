@@ -78,14 +78,14 @@ class TaskRepository:
         """
         return await self.task_service.get_task_by_id(task_id)
 
-    async def get_all_tasks(self) -> List[TaskSchemaResponse]:
+    async def get_all_tasks(self, user_id: str) -> List[TaskSchemaResponse]:
         """
         Получает все задачи
 
         Returns:
             List[TaskSchemaResponse]: Список всех задач
         """
-        return await self.task_service.get_all_tasks()
+        return await self.task_service.get_all_tasks(user_id)
 
     async def update_task(
         self,

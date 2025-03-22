@@ -136,22 +136,38 @@ class TaskService:
             end_time=task.end_time
         )
 
-    async def get_all_tasks(self) -> List[TaskSchemaResponse]:
-        """Получить все задачи"""
+    async def get_all_tasks(self, user_id: str) -> List[TaskSchemaResponse]:
+        """
+        Получить все задачи пользователя
 
-        query = select(TaskModel)
-        result = await self.db_session.execute(query)
-        tasks = result.scalars().all()
+        Args:
+            user_id: ID пользователя
 
-        return [
-            TaskSchemaResponse(
-                id=task.id,
-                title=task.title,
-                description=task.description,
-                start_time=task.start_time,
-                end_time=task.end_time
-            ) for task in tasks
-        ]
+        Returns:
+            List[TaskSchemaResponse]: Список задач, принадлежащих указанному пользователю
+        """
+        try:
+            # Получаем только задачи, принадлежащие указанному пользователю
+            query = select(TaskModel).where(TaskModel.user_id == user_id)
+            result = self.db_session.execute(query)
+            # Используем scalars().all() для получения списка объектов
+            tasks = result.scalars().all()
+            task_responses = [
+                TaskSchemaResponse(
+                    id=task.id,
+                    title=task.title,
+                    description=task.description,
+                    start_time=task.start_time,
+                    end_time=task.end_time
+                ) for task in tasks
+            ]
+
+            return task_responses
+
+        except Exception as e:
+            logger.error(
+                f"Ошибка при получении задач пользователя: {str(e)}", exc_info=True)
+            raise
 
     async def update_task(
         self,
