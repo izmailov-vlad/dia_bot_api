@@ -83,18 +83,20 @@ class TaskService:
     async def create_task(
         self,
         task: TaskSchemaCreate,
+        user_id: str
     ) -> TaskSchemaResponse:
         """Создать новую задачу"""
 
         task_id = str(uuid4())
         task = TaskModel(
             id=task_id,
+            user_id=user_id,
             title=task.title,
             description=task.description,
             start_time=task.start_time,
             end_time=task.end_time,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         self.db_session.add(task)
