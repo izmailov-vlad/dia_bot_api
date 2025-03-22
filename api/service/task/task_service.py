@@ -11,6 +11,7 @@ from sqlalchemy import update, delete
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.schemas.task.task_schema_response_gpt import TaskSchemaResponseGpt
+from api.schemas.task.task_schema_update import TaskSchemaUpdate
 from api.service.task.create_task_prompt import create_task_prompt
 from database.database import get_db
 from database.models.task.task_model import TaskModel
@@ -121,20 +122,57 @@ class TaskService:
             logger.debug("=== ОШИБКА СОЗДАНИЯ ЗАДАЧИ ===")
             raise
 
-    async def get_task_by_id(self, task_id: str) -> Optional[TaskSchemaResponse]:
+    async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskSchemaResponse]:
         """Получить задачу по ID"""
+        logger.debug(f"=== НАЧАЛО ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID ===")
+        logger.debug(
+            f"Параметры запроса: task_id={task_id}, user_id={user_id}")
 
-        query = select(TaskModel).where(TaskModel.id == task_id)
-        result = await self.db_session.execute(query)
-        task = result.scalars().first()
+        try:
+            logger.debug(f"Формирование SQL-запроса для поиска задачи")
+            query = select(TaskModel).where(
+                TaskModel.id == task_id,
+                TaskModel.user_id == user_id,
+            )
+            logger.debug(f"SQL-запрос сформирован: {query}")
 
-        return TaskSchemaResponse(
-            id=task_id,
-            title=task.title,
-            description=task.description,
-            start_time=task.start_time,
-            end_time=task.end_time
-        )
+            logger.debug(f"Выполнение запроса к БД")
+            result = self.db_session.execute(query)
+            logger.debug(f"Запрос к БД выполнен успешно")
+
+            task = result.scalars().first()
+
+            if task is None:
+                logger.warning(
+                    f"Задача с ID={task_id} для пользователя ID={user_id} не найдена")
+                logger.debug(
+                    f"=== ЗАВЕРШЕНИЕ ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID (НЕ НАЙДЕНА) ===")
+                return None
+
+            logger.debug(f"Задача найдена: ID={task.id}, title='{task.title}'")
+            logger.debug(f"Создание объекта ответа TaskSchemaResponse")
+
+            response = TaskSchemaResponse(
+                id=task.id,
+                title=task.title,
+                description=task.description,
+                start_time=task.start_time,
+                end_time=task.end_time
+            )
+
+            logger.debug(f"Объект ответа создан успешно")
+            logger.debug(
+                f"=== ЗАВЕРШЕНИЕ ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID (УСПЕШНО) ===")
+
+            return response
+
+        except Exception as e:
+            logger.error(
+                f"Ошибка при получении задачи: {str(e)}", exc_info=True)
+            logger.debug(f"Тип исключения: {type(e).__name__}")
+            logger.debug(f"Аргументы исключения: {e.args}")
+            logger.debug("=== ОШИБКА ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID ===")
+            raise
 
     async def get_all_tasks(self, user_id: str) -> List[TaskSchemaResponse]:
         """
@@ -172,49 +210,47 @@ class TaskService:
     async def update_task(
         self,
         task_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        user_id: str,
+        new_task: TaskSchemaUpdate,
     ) -> Optional[TaskSchemaResponse]:
         """Обновить задачу"""
 
-        task = await self.get_task_by_id(task_id)
+        task = await self.get_task_by_id(task_id, user_id)
         if not task:
             return None
 
         update_data = {}
-        if title is not None:
-            update_data["title"] = title
-        if description is not None:
-            update_data["description"] = description
-        if start_time is not None:
-            update_data["start_time"] = start_time
-        if end_time is not None:
-            update_data["end_time"] = end_time
+        if new_task.title is not None:
+            update_data["title"] = new_task.title
+        if new_task.description is not None:
+            update_data["description"] = new_task.description
+        if new_task.start_time is not None:
+            update_data["start_time"] = new_task.start_time
+        if new_task.end_time is not None:
+            update_data["end_time"] = new_task.end_time
 
         update_data["updated_at"] = datetime.now()
 
         query = update(TaskModel).where(
-            TaskModel.id == task_id).values(**update_data)
+            TaskModel.id == task_id, TaskModel.user_id == user_id).values(**update_data)
 
         self.db_session.execute(query)
         self.db_session.commit()
 
-        task = await self.get_task_by_id(task_id)
+        new_task = await self.get_task_by_id(task_id, user_id)
 
         return TaskSchemaResponse(
             id=task.id,
-            title=task.title,
-            description=task.description,
-            start_time=task.start_time,
-            end_time=task.end_time
+            title=new_task.title,
+            description=new_task.description,
+            start_time=new_task.start_time,
+            end_time=new_task.end_time
         )
 
     async def delete_task(self, task_id: str, user_id: str) -> bool:
         """Удалить задачу"""
 
-        task = await self.get_task_by_id(task_id)
+        task = await self.get_task_by_id(task_id, user_id)
         if not task:
             return False
 

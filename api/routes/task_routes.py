@@ -45,9 +45,14 @@ async def get_tasks(
 
 
 @router.put("/tasks/{task_id}", response_model=TaskSchemaResponse)
-async def update_task(task_id: str, task: TaskSchemaUpdate, task_repository: TaskRepository = Depends(get_task_repository)):
+async def update_task(
+    task_id: str,
+    task: TaskSchemaUpdate,
+    current_user: UserModel = Depends(get_current_user),
+    task_repository: TaskRepository = Depends(get_task_repository)
+):
     """Обновление задачи"""
-    return await task_repository.update_task(task_id, task)
+    return await task_repository.update_task(task_id=task_id, user_id=current_user.id, task=task)
 
 
 @router.delete("/tasks/{task_id}", response_model=dict)
@@ -57,4 +62,5 @@ async def delete_task(
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
     """Удаление задачи"""
-    return await task_repository.delete_task(task_id, current_user.id)
+    success = await task_repository.delete_task(task_id, current_user.id)
+    return {'success': success}

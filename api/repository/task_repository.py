@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import Depends
 from openai import OpenAI
 
+from api.schemas.task.task_schema_update import TaskSchemaUpdate
 from api.service.task.task_service import TaskService
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
@@ -90,26 +91,22 @@ class TaskRepository:
     async def update_task(
         self,
         task_id: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        user_id: str,
+        task: TaskSchemaUpdate,
     ) -> Optional[TaskSchemaResponse]:
         """
         Обновляет задачу
 
         Args:
             task_id: ID задачи
-            title: Новый заголовок (опционально)
-            description: Новое описание (опционально)
-            start_time: Новое время начала (опционально)
-            end_time: Новое время окончания (опционально)
+            user_id: ID пользователя
+            task: Данные для обновления задачи
 
         Returns:
             Optional[TaskSchemaResponse]: Обновленная задача или None
         """
         return await self.task_service.update_task(
-            task_id, title, description, start_time, end_time
+            task_id, user_id, task
         )
 
     async def delete_task(self, task_id: str, user_id: str) -> bool:
