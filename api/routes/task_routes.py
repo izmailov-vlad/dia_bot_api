@@ -31,24 +31,24 @@ async def create_task(
 
 
 @router.get("/tasks/{task_id}", response_model=TaskSchemaResponse)
-async def get_task(task_id: str, task_service: TaskService = Depends(get_task_service)):
+async def get_task(task_id: str, task_repository: TaskRepository = Depends(get_task_repository)):
     """Получение задачи по ID"""
-    return await task_service.get_task_by_id(task_id)
+    return await task_repository.get_task_by_id(task_id)
 
 
 @router.get("/tasks", response_model=List[TaskSchemaResponse])
-async def get_tasks(task_service: TaskService = Depends(get_task_service)):
+async def get_tasks(task_repository: TaskRepository = Depends(get_task_repository)):
     """Получение всех задач"""
-    return await task_service.get_all_tasks()
+    return await task_repository.get_all_tasks()
 
 
 @router.put("/tasks/{task_id}", response_model=TaskSchemaResponse)
-async def update_task(task_id: str, task: TaskSchemaUpdate, task_service: TaskService = Depends(get_task_service)):
+async def update_task(task_id: str, task: TaskSchemaUpdate, task_repository: TaskRepository = Depends(get_task_repository)):
     """Обновление задачи"""
-    return await task_service.update_task(task_id, task)
+    return await task_repository.update_task(task_id, task)
 
 
 @router.delete("/tasks/{task_id}", response_model=dict)
-async def delete_task(task_id: str, task_service: TaskService = Depends(get_task_service)):
+async def delete_task(task_id: str, task_repository: TaskRepository = Depends(get_task_repository)):
     """Удаление задачи"""
-    return await task_service.delete_task(task_id)
+    return await task_repository.delete_task(task_id)
