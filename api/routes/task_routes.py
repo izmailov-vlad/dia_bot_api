@@ -3,7 +3,6 @@ from typing import List
 import logging
 
 from api.repository.task_repository import TaskRepository, get_task_repository
-from api.service.task.task_service import TaskService, get_task_service
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.schemas.task.task_schema_update import TaskSchemaUpdate
