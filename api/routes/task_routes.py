@@ -1,26 +1,33 @@
 from fastapi import APIRouter, Depends
 from typing import List
+import logging
 
-from api.service.task.task_service import TaskService
+from api.repository.task_repository import TaskRepository, get_task_repository
+from api.service.task.task_service import TaskService, get_task_service
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.schemas.task.task_schema_update import TaskSchemaUpdate
-from dependencies import get_task_service
+
 from api.middleware.auth_middleware import get_current_user
 from database.models.user.user_model import UserModel
+
+# Настраиваем логгер для этого модуля
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["tasks"])
 
 
 @router.post("/tasks", response_model=TaskSchemaResponse)
-def create_task(
+async def create_task(
     task: TaskSchemaCreate,
     current_user: UserModel = Depends(get_current_user),
-    task_service: TaskService = Depends(get_task_service)
+    task_repository: TaskRepository = Depends(get_task_repository)
 ):
     """Создание новой задачи"""
-    # Здесь мы можем установить task.user_id = current_user.id
-    return task_service.create_task(task, current_user.id)
+    try:
+        return await task_repository.create_task(task, current_user.id)
+    except Exception as e:
+        raise
 
 
 @router.get("/tasks/{task_id}", response_model=TaskSchemaResponse)

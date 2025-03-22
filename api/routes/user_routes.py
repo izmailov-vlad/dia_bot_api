@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
 
 from api.schemas.user.user_schema_request_create import UserSchemaRequestCreate
 from api.schemas.user.user_schema_response import UserSchemaResponse

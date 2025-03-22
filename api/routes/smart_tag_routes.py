@@ -1,15 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Optional
-import json
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List
 
 from api.schemas.smart_tag.smart_tag_schema_create import SmartTagSchemaCreate
 
 from api.schemas.smart_tag.smart_tag_schema_response import SmartTagSchemaResponse
 from api.schemas.smart_tag.smart_tag_schema_update import SmartTagSchemaUpdate
-from api.schemas.task.task_schema_response import TaskSchemaResponse
-from api.service.smart_tag_service import SmartTagService
-from api.service.task.task_service import TaskService
-from dependencies import get_smart_tag_service, get_task_service
+from api.service.smart_tag_service import SmartTagService, get_smart_tag_service
 
 
 router = APIRouter(tags=["smart_tags"])

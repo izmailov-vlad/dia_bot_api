@@ -4,8 +4,7 @@ from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
 
-from fastapi import Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 
@@ -18,7 +17,6 @@ from database.models.task.task_model import TaskModel
 from sqlalchemy.orm import Session
 from openai import OpenAI
 
-from database.models.user.user_model import UserModel
 from dependencies import get_open_ai_client
 
 # Настраиваем логгер для этого модуля
@@ -88,30 +86,40 @@ class TaskService:
         user_id: str
     ) -> TaskSchemaResponse:
         """Создать новую задачу"""
+        try:
+            task_id = str(uuid4())
+            new_task = TaskModel(
+                id=task_id,
+                user_id=user_id,
+                title=task.title,
+                description=task.description,
+                start_time=task.start_time,
+                end_time=task.end_time,
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
+            )
 
-        task_id = str(uuid4())
-        task = TaskModel(
-            id=task_id,
-            user_id=user_id,
-            title=task.title,
-            description=task.description,
-            start_time=task.start_time,
-            end_time=task.end_time,
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
-        )
+            self.db_session.add(new_task)
+            self.db_session.commit()
+            self.db_session.refresh(new_task)
+            # Создание ответа
+            response = TaskSchemaResponse(
+                id=task_id,
+                title=new_task.title,
+                description=new_task.description,
+                start_time=new_task.start_time,
+                end_time=new_task.end_time
+            )
 
-        self.db_session.add(task)
-        self.db_session.commit()
-        self.db_session.refresh(task)
+            return response
 
-        return TaskSchemaResponse(
-            id=task_id,
-            title=task.title,
-            description=task.description,
-            start_time=task.start_time,
-            end_time=task.end_time
-        )
+        except Exception as e:
+            logger.error(
+                f"Ошибка при создании задачи: {str(e)}", exc_info=True)
+            logger.debug(f"Тип исключения: {type(e).__name__}")
+            logger.debug(f"Аргументы исключения: {e.args}")
+            logger.debug("=== ОШИБКА СОЗДАНИЯ ЗАДАЧИ ===")
+            raise
 
     async def get_task_by_id(self, task_id: str) -> Optional[TaskSchemaResponse]:
         """Получить задачу по ID"""
