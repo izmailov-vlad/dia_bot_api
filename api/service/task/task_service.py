@@ -65,18 +65,12 @@ class TaskService:
                 presence_penalty=0
             )
 
-            logger.debug(f"Получен ответ от GPT: {response}")
             gpt_response_json = response.choices[0].message.content
-            logger.debug(f"JSON ответ от GPT: {gpt_response_json}")
-
             task_gpt_data = json.loads(gpt_response_json)
-            logger.debug(f"Распарсенные данные задачи: {task_gpt_data}")
-
             task_schema_response_gpt = TaskSchemaResponseGpt(**task_gpt_data)
-            logger.debug(
-                f"Создан объект TaskSchemaResponseGpt: {task_schema_response_gpt}")
 
             return task_schema_response_gpt
+
         except json.JSONDecodeError as e:
             logger.error(f"Ошибка при парсинге JSON ответа от GPT: {str(e)}")
             logger.error(f"Невалидный JSON: {gpt_response_json}")
