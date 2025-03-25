@@ -2,6 +2,14 @@ from sqlalchemy import Column, String, DateTime, Enum, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from database.database import Base
 from datetime import datetime
+import enum
+
+# Добавляем класс для Enum
+
+
+class TaskStatus(enum.Enum):
+    created = "created"
+    completed = "completed"
 
 
 class TaskModel(Base):
@@ -11,7 +19,14 @@ class TaskModel(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=True)
+    reminder = Column(DateTime, nullable=True)
+    mark = Column(String, nullable=True)
+    status = Column(
+        Enum(TaskStatus),
+        nullable=False,
+        default=TaskStatus.created,
+    )
     created_at = Column(
         DateTime,
         nullable=False,

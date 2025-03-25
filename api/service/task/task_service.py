@@ -96,6 +96,10 @@ class TaskService:
                 description=task.description,
                 start_time=task.start_time,
                 end_time=task.end_time,
+                reminder=task.reminder,
+                mark=task.mark,
+                status=task.status,
+                smart_tag_id=task.smart_tag_id,
                 created_at=datetime.now(),
                 updated_at=datetime.now(),
             )
@@ -109,9 +113,11 @@ class TaskService:
                 title=new_task.title,
                 description=new_task.description,
                 start_time=new_task.start_time,
-                end_time=new_task.end_time
+                end_time=new_task.end_time,
+                reminder=new_task.reminder,
+                mark=new_task.mark,
+                status=new_task.status,
             )
-
             return response
 
         except Exception as e:
@@ -141,9 +147,11 @@ class TaskService:
                 title=task.title,
                 description=task.description,
                 start_time=task.start_time,
-                end_time=task.end_time
+                end_time=task.end_time,
+                reminder=task.reminder,
+                mark=task.mark,
+                status=task.status,
             )
-
             return response
 
         except Exception as e:
@@ -165,10 +173,8 @@ class TaskService:
             List[TaskSchemaResponse]: Список задач, принадлежащих указанному пользователю
         """
         try:
-            # Получаем только задачи, принадлежащие указанному пользователю
             query = select(TaskModel).where(TaskModel.user_id == user_id)
             result = self.db_session.execute(query)
-            # Используем scalars().all() для получения списка объектов
             tasks = result.scalars().all()
             task_responses = [
                 TaskSchemaResponse(
@@ -176,7 +182,10 @@ class TaskService:
                     title=task.title,
                     description=task.description,
                     start_time=task.start_time,
-                    end_time=task.end_time
+                    end_time=task.end_time,
+                    reminder=task.reminder,
+                    mark=task.mark,
+                    status=task.status,
                 ) for task in tasks
             ]
 
@@ -200,32 +209,23 @@ class TaskService:
             return None
 
         update_data = {}
-        if new_task.title is not None:
-            update_data["title"] = new_task.title
-        if new_task.description is not None:
-            update_data["description"] = new_task.description
-        if new_task.start_time is not None:
-            update_data["start_time"] = new_task.start_time
-        if new_task.end_time is not None:
-            update_data["end_time"] = new_task.end_time
+        # Добавляем новые поля в обновление
+        for field in ['title', 'description', 'start_time', 'end_time',
+                      'reminder', 'mark', 'status']:
+            if hasattr(new_task, field) and getattr(new_task, field) is not None:
+                update_data[field] = getattr(new_task, field)
 
         update_data["updated_at"] = datetime.now()
 
         query = update(TaskModel).where(
-            TaskModel.id == task_id, TaskModel.user_id == user_id).values(**update_data)
+            TaskModel.id == task_id,
+            TaskModel.user_id == user_id
+        ).values(**update_data)
 
         self.db_session.execute(query)
         self.db_session.commit()
 
-        new_task = await self.get_task_by_id(task_id, user_id)
-
-        return TaskSchemaResponse(
-            id=task.id,
-            title=new_task.title,
-            description=new_task.description,
-            start_time=new_task.start_time,
-            end_time=new_task.end_time
-        )
+        return await self.get_task_by_id(task_id, user_id)
 
     async def delete_task(self, task_id: str, user_id: str) -> bool:
         """Удалить задачу"""
