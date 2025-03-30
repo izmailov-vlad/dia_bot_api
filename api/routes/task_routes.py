@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from typing import List
 import logging
 
-from api.repository.task_repository import TaskRepository, get_task_repository
+from api.repository.task.task_repository import TaskRepository, get_task_repository
 from api.schemas.task.task_schema_create import TaskSchemaCreate
 from api.schemas.task.task_schema_response import TaskSchemaResponse
 from api.schemas.task.task_schema_update import TaskSchemaUpdate
