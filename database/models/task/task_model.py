@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Enum, Integer, ForeignKey
+from sqlalchemy import Column, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from database.database import Base
 from datetime import datetime
@@ -7,7 +7,7 @@ import enum
 # Добавляем класс для Enum
 
 
-class TaskStatus(enum.Enum):
+class TaskStatusModel(enum.Enum):
     created = "created"
     completed = "completed"
 
@@ -23,9 +23,9 @@ class TaskModel(Base):
     reminder = Column(DateTime, nullable=True)
     mark = Column(String, nullable=True)
     status = Column(
-        Enum(TaskStatus),
+        Enum(TaskStatusModel),
         nullable=False,
-        default=TaskStatus.created,
+        default=TaskStatusModel.created,
     )
     created_at = Column(
         DateTime,
@@ -40,9 +40,6 @@ class TaskModel(Base):
     )
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     user = relationship("UserModel", back_populates="tasks")
-
-    smart_tag_id = Column(String, ForeignKey('smart_tags.id'), nullable=True)
-    smart_tag = relationship("SmartTagModel", back_populates="tasks")
 
     def __repr__(self):
         return f"<Task(id={self.id}, title={self.title}, user_id={self.user_id})>"

@@ -24,7 +24,7 @@ class UserModel(Base):
 
     # Определение отношений
     tasks = relationship("TaskModel", back_populates="user")
-    smart_tags = relationship("SmartTagModel", back_populates="user")
+
     refresh_tokens = relationship(
         "RefreshToken", back_populates="user", cascade="all, delete-orphan")
 

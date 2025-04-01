@@ -3,11 +3,11 @@ from datetime import datetime
 from fastapi import Depends
 from openai import OpenAI
 
-from api.schemas.task.task_schema_update import TaskSchemaUpdate
+from api.schemas.task.task_update_schema import TaskUpdateSchema
 from api.service.task.task_service import TaskService
-from api.schemas.task.task_schema_create import TaskSchemaCreate
-from api.schemas.task.task_schema_response import TaskSchemaResponse
-from api.schemas.task.task_schema_response_gpt import TaskSchemaResponseGpt
+from api.schemas.task.task_create_schema import TaskCreateSchema
+from api.schemas.task.task_response_schema import TaskResponseSchema
+from api.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
 from database.database import get_db
 from sqlalchemy.orm import Session
 
@@ -30,7 +30,7 @@ class TaskRepository:
         """
         self.task_service = task_service
 
-    async def generate_task_gpt(self, request: str) -> TaskSchemaResponseGpt:
+    async def generate_task_gpt(self, request: str) -> TaskResponseGptSchema:
         """
         Генерирует задачу с помощью GPT на основе текстового запроса
 
@@ -42,19 +42,19 @@ class TaskRepository:
         """
         return await self.task_service.generate_task_gpt(request)
 
-    async def create_task_gpt(self, request: str, user_id: str) -> TaskSchemaResponse:
+    async def create_task_gpt(self, request: str, user_id: str) -> TaskResponseSchema:
         """
         Создаёт задачу с помощью GPT
         """
         gpt_task = await self.task_service.generate_task_gpt(request)
-        task_data = TaskSchemaCreate(
+        task_data = TaskCreateSchema(
             title=gpt_task.title,
             start_time=gpt_task.start_time,
             end_time=gpt_task.end_time
         )
         return await self.task_service.create_task(task=task_data, user_id=user_id)
 
-    async def create_task(self, task: TaskSchemaCreate, user_id: str) -> TaskSchemaResponse:
+    async def create_task(self, task: TaskCreateSchema, user_id: str) -> TaskResponseSchema:
         """
         Создаёт новую задачу
 
@@ -67,7 +67,7 @@ class TaskRepository:
         """
         return await self.task_service.create_task(task, user_id)
 
-    async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskSchemaResponse]:
+    async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskResponseSchema]:
         """
         Получает задачу по ID
 
@@ -79,7 +79,7 @@ class TaskRepository:
         """
         return await self.task_service.get_task_by_id(task_id, user_id)
 
-    async def get_all_tasks(self, user_id: str) -> List[TaskSchemaResponse]:
+    async def get_all_tasks(self, user_id: str) -> List[TaskResponseSchema]:
         """
         Получает все задачи
 
@@ -92,8 +92,8 @@ class TaskRepository:
         self,
         task_id: str,
         user_id: str,
-        task: TaskSchemaUpdate,
-    ) -> Optional[TaskSchemaResponse]:
+        task: TaskUpdateSchema,
+    ) -> Optional[TaskResponseSchema]:
         """
         Обновляет задачу
 
@@ -123,7 +123,7 @@ class TaskRepository:
 
     async def get_tasks_by_date_range(
         self, start_date: datetime, end_date: datetime
-    ) -> List[TaskSchemaResponse]:
+    ) -> List[TaskResponseSchema]:
         """
         Получает задачи в заданном временном диапазоне
 

@@ -8,10 +8,10 @@ from fastapi import Depends
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 
-from api.schemas.task.task_schema_create import TaskSchemaCreate
-from api.schemas.task.task_schema_response import TaskSchemaResponse
-from api.schemas.task.task_schema_response_gpt import TaskSchemaResponseGpt
-from api.schemas.task.task_schema_update import TaskSchemaUpdate
+from api.schemas.task.task_create_schema import TaskCreateSchema
+from api.schemas.task.task_response_schema import TaskResponseSchema
+from api.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
+from api.schemas.task.task_update_schema import TaskUpdateSchema
 from api.service.task.create_task_prompt import create_task_prompt
 from database.database import get_db
 from database.models.task.task_model import TaskModel
@@ -29,7 +29,7 @@ class TaskService:
         self.db_session = db_session
         self.client = client
 
-    async def generate_task_gpt(self, request: str) -> TaskSchemaResponseGpt:
+    async def generate_task_gpt(self, request: str) -> TaskResponseGptSchema:
         logger.debug(f"Начало создания задачи через GPT с запросом: {request}")
 
         try:
@@ -68,7 +68,7 @@ class TaskService:
 
             gpt_response_json = response.choices[0].message.content
             task_gpt_data = json.loads(gpt_response_json)
-            task_schema_response_gpt = TaskSchemaResponseGpt(**task_gpt_data)
+            task_schema_response_gpt = TaskResponseGptSchema(**task_gpt_data)
 
             return task_schema_response_gpt
 
@@ -83,9 +83,9 @@ class TaskService:
 
     async def create_task(
         self,
-        task: TaskSchemaCreate,
+        task: TaskCreateSchema,
         user_id: str
-    ) -> TaskSchemaResponse:
+    ) -> TaskResponseSchema:
         """Создать новую задачу"""
         try:
             task_id = str(uuid4())
@@ -99,7 +99,6 @@ class TaskService:
                 reminder=task.reminder,
                 mark=task.mark,
                 status=task.status,
-                smart_tag_id=task.smart_tag_id,
                 created_at=datetime.now(),
                 updated_at=datetime.now(),
             )
@@ -108,7 +107,7 @@ class TaskService:
             self.db_session.commit()
             self.db_session.refresh(new_task)
             # Создание ответа
-            response = TaskSchemaResponse(
+            response = TaskResponseSchema(
                 id=task_id,
                 title=new_task.title,
                 description=new_task.description,
@@ -128,7 +127,7 @@ class TaskService:
             logger.debug("=== ОШИБКА СОЗДАНИЯ ЗАДАЧИ ===")
             raise
 
-    async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskSchemaResponse]:
+    async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskResponseSchema]:
         """Получить задачу по ID"""
 
         try:
@@ -142,7 +141,7 @@ class TaskService:
             if task is None:
                 return None
 
-            response = TaskSchemaResponse(
+            response = TaskResponseSchema(
                 id=task.id,
                 title=task.title,
                 description=task.description,
@@ -162,7 +161,7 @@ class TaskService:
             logger.debug("=== ОШИБКА ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID ===")
             raise
 
-    async def get_all_tasks(self, user_id: str) -> List[TaskSchemaResponse]:
+    async def get_all_tasks(self, user_id: str) -> List[TaskResponseSchema]:
         """
         Получить все задачи пользователя
 
@@ -177,7 +176,7 @@ class TaskService:
             result = self.db_session.execute(query)
             tasks = result.scalars().all()
             task_responses = [
-                TaskSchemaResponse(
+                TaskResponseSchema(
                     id=task.id,
                     title=task.title,
                     description=task.description,
@@ -200,8 +199,8 @@ class TaskService:
         self,
         task_id: str,
         user_id: str,
-        new_task: TaskSchemaUpdate,
-    ) -> Optional[TaskSchemaResponse]:
+        new_task: TaskUpdateSchema,
+    ) -> Optional[TaskResponseSchema]:
         """Обновить задачу"""
 
         task = await self.get_task_by_id(task_id, user_id)
@@ -241,7 +240,7 @@ class TaskService:
 
         return True
 
-    async def get_tasks_by_date_range(self, start_date: datetime, end_date: datetime) -> List[TaskSchemaResponse]:
+    async def get_tasks_by_date_range(self, start_date: datetime, end_date: datetime) -> List[TaskResponseSchema]:
         """Получить задачи в заданном временном диапазоне"""
 
         query = select(TaskModel).where(
@@ -252,7 +251,7 @@ class TaskService:
         tasks = result.scalars().all()
 
         return [
-            TaskSchemaResponse(
+            TaskResponseSchema(
                 id=task.id,
                 title=task.title,
                 description=task.description,

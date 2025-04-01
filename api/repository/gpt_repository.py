@@ -1,8 +1,8 @@
 import logging
 
 from fastapi import Depends
-from api.schemas.task.task_schema_create import TaskSchemaCreate
-from api.schemas.task.task_schema_response import TaskSchemaResponse
+from api.schemas.task.task_create_schema import TaskCreateSchema
+from api.schemas.task.task_response_schema import TaskResponseSchema
 from api.service.gpt.gpt_service import GPTService, get_gpt_service
 from api.service.task.task_service import TaskService, get_task_service
 
@@ -33,11 +33,19 @@ class GPTRepository:
             logger.error(f"Ошибка в методе request: {str(e)}", exc_info=True)
             raise
 
+    async def define_filters(self, request: str) -> list[str]:
+        try:
+            return await self.gpt_service.define_filters(request)
+        except Exception as e:
+            logger.error(
+                f"Ошибка в методе define_filters: {str(e)}", exc_info=True)
+            raise
+
     # [request] field is a string from args
-    async def create_task(self, request: str) -> TaskSchemaResponse:
+    async def create_task(self, request: str) -> TaskResponseSchema:
         try:
             taskSchemaResponseGpt = await self.task_service.generate_task_gpt(request)
-            task_data = TaskSchemaCreate(
+            task_data = TaskCreateSchema(
                 title=taskSchemaResponseGpt.title,
                 start_time=taskSchemaResponseGpt.start_time,
                 end_time=taskSchemaResponseGpt.end_time

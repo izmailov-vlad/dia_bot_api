@@ -126,40 +126,6 @@ class UserService:
 
         return True
 
-    def get_user_smart_tags(self, user_id: str):
-        """
-        Получает умные теги пользователя
-
-        Args:
-            user_id: ID пользователя
-
-        Returns:
-            List[SmartTagSchemaResponse]: Список умных тегов пользователя
-
-        Raises:
-            HTTPException: Если пользователь не найден
-        """
-        # Проверяем существование пользователя
-        user = self.db_session.query(UserModel).filter(
-            UserModel.id == user_id).first()
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Пользователь с ID {user_id} не найден"
-            )
-
-        # Импортируем SmartTagModel здесь, чтобы избежать циклического импорта
-        from database.models.smart_tag.smart_tag_model import SmartTagModel
-
-        # Формируем запрос на получение умных тегов пользователя
-        smart_tags = self.db_session.query(SmartTagModel).filter(
-            SmartTagModel.user_id == user_id).all()
-
-        # Импортируем SmartTagSchemaResponse здесь, чтобы избежать циклического импорта
-        from api.schemas.smart_tag.smart_tag_schema_response import SmartTagSchemaResponse
-
-        return [SmartTagSchemaResponse.model_validate(tag) for tag in smart_tags]
-
 
 # Функция для внедрения зависимости
 def get_user_service(db_session: Session = Depends(get_db)) -> UserService:

@@ -3,9 +3,9 @@ from typing import List
 import logging
 
 from api.repository.task.task_repository import TaskRepository, get_task_repository
-from api.schemas.task.task_schema_create import TaskSchemaCreate
-from api.schemas.task.task_schema_response import TaskSchemaResponse
-from api.schemas.task.task_schema_update import TaskSchemaUpdate
+from api.schemas.task.task_create_schema import TaskCreateSchema
+from api.schemas.task.task_response_schema import TaskResponseSchema
+from api.schemas.task.task_update_schema import TaskUpdateSchema
 
 from api.middleware.auth_middleware import get_current_user
 from database.models.user.user_model import UserModel
@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["tasks"])
 
 
-@router.post("/tasks", response_model=TaskSchemaResponse)
+@router.post("/tasks", response_model=TaskResponseSchema)
 async def create_task(
-    task: TaskSchemaCreate,
+    task: TaskCreateSchema,
     current_user: UserModel = Depends(get_current_user),
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
@@ -29,7 +29,7 @@ async def create_task(
         raise
 
 
-@router.get("/tasks/{task_id}", response_model=TaskSchemaResponse)
+@router.get("/tasks/{task_id}", response_model=TaskResponseSchema)
 async def get_task(
     task_id: str,
     task_repository: TaskRepository = Depends(get_task_repository),
@@ -39,7 +39,7 @@ async def get_task(
     return await task_repository.get_task_by_id(task_id, current_user.id)
 
 
-@router.get("/tasks", response_model=List[TaskSchemaResponse])
+@router.get("/tasks", response_model=List[TaskResponseSchema])
 async def get_tasks(
     current_user: UserModel = Depends(get_current_user),
     task_repository: TaskRepository = Depends(get_task_repository),
@@ -48,10 +48,10 @@ async def get_tasks(
     return await task_repository.get_all_tasks(current_user.id)
 
 
-@router.put("/tasks/{task_id}", response_model=TaskSchemaResponse)
+@router.put("/tasks/{task_id}", response_model=TaskResponseSchema)
 async def update_task(
     task_id: str,
-    task: TaskSchemaUpdate,
+    task: TaskUpdateSchema,
     current_user: UserModel = Depends(get_current_user),
     task_repository: TaskRepository = Depends(get_task_repository)
 ):

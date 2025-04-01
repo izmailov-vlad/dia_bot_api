@@ -2,16 +2,16 @@ from datetime import datetime
 from typing import Optional, Union
 from pydantic import BaseModel
 from api.schemas.range_filter import RangeFilter
-from database.models.task.task_model import TaskStatus
+from database.models.task.task_model import TaskStatusModel
 
 
-class TaskFiltersModel(BaseModel):
+class TaskFiltersSchema(BaseModel):
     """Pydantic-модель, для фильтрации задач."""
     start_time: Optional[Union[datetime, RangeFilter]] = None
     end_time: Optional[Union[datetime, RangeFilter]] = None
     reminder: Optional[Union[datetime, RangeFilter]] = None
     mark: Optional[str] = None
-    status: Optional[TaskStatus] = None
+    status: Optional[TaskStatusModel] = None
 
     class Config:
         # Запрещаем лишние поля (эквивалент additionalProperties=false)

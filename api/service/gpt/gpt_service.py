@@ -1,7 +1,6 @@
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
-from api.service.smart_tag_service import SmartTagService, get_smart_tag_service
 from api.service.task.task_service import TaskService, get_task_service
 from api.service.gpt.gpt_system_prompt import system_prompt
 from dependencies import get_open_ai_client
@@ -12,11 +11,9 @@ class GPTService:
         self,
         client: OpenAI,
         task_service: TaskService,
-        smart_tag_service: SmartTagService,
     ):
         self.client = client
         self.task_service = task_service
-        self.smart_tag_service = smart_tag_service
 
     async def request(self, request: ChatGptRequestSchema) -> ChatCompletion:
         return self.client.chat.completions.create(
@@ -80,5 +77,4 @@ def get_gpt_service() -> GPTService:
     return GPTService(
         client=get_open_ai_client(),
         task_service=get_task_service(),
-        smart_tag_service=get_smart_tag_service()
     )
