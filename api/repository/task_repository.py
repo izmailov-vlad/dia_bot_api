@@ -30,6 +30,10 @@ class TaskRepository:
         """
         self.task_service = task_service
 
+    async def search_by_query(self, query: str) -> List[TaskResponseSchema]:
+        """Поиск задач по запросу"""
+        return await self.task_service.search_by_query(query)
+
     async def generate_task_gpt(self, request: str) -> TaskResponseGptSchema:
         """
         Генерирует задачу с помощью GPT на основе текстового запроса

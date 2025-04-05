@@ -27,11 +27,28 @@ logger = logging.getLogger(__name__)
 
 
 class TaskService:
-    def __init__(self, db_session: Session, client: OpenAI, qdrant_client: QdrantClient, transformer_model: SentenceTransformer):
+    def __init__(
+        self,
+        db_session: Session,
+        client: OpenAI,
+        qdrant_client: QdrantClient,
+        transformer_model: SentenceTransformer,
+    ):
         self.db_session = db_session
         self.client = client
         self.qdrant_client = qdrant_client
         self.transformer_model = transformer_model
+
+    async def search_by_query(self, query: str) -> List[TaskResponseSchema]:
+        """Поиск задач по запросу"""
+
+        results = self.qdrant_client.search(
+            collection_name="tasks",
+            query_vector=self.transformer_model.encode(query),
+            limit=10
+        )
+
+        return [{"task": r.payload, "score": r.score} for r in results]
 
     async def generate_task_gpt(self, request: str) -> TaskResponseGptSchema:
         logger.debug(f"Начало создания задачи через GPT с запросом: {request}")

@@ -3,6 +3,7 @@ from typing import Dict, Any, Union
 
 from api.middleware.auth_middleware import get_current_user
 from api.repository.agent_manager_repository import AgentManagerRepository, get_agent_manager_repository
+from api.repository.task_repository import TaskRepository, get_task_repository
 from api.schemas.schedule.edited_schedule_schema import EditedScheduleSchema
 from database.models.user.user_model import UserModel
 from api.service.schedule.schedule_service import ScheduleService, get_schedule_service
@@ -15,8 +16,8 @@ router = APIRouter(prefix="/assistant", tags=["assistant"])
 async def request_assistant(
     message: str,
     current_user: UserModel = Depends(get_current_user),
-    agent_manager_repository: AgentManagerRepository = Depends(
-        get_agent_manager_repository,
+    task_repository: TaskRepository = Depends(
+        get_task_repository,
     )
 ) -> Union[str, EditedScheduleSchema]:
     """
@@ -32,7 +33,8 @@ async def request_assistant(
         Dict с ответом ассистента
     """
     try:
-        return await agent_manager_repository.request(message, current_user.id)
+        tasks = await task_repository.search_by_query(message)
+        return tasks
 
     except Exception as e:
         raise HTTPException(
