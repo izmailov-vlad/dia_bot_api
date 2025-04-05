@@ -5,6 +5,8 @@ from uuid import uuid4
 from datetime import datetime
 
 from fastapi import Depends
+from qdrant_client import QdrantClient
+from sentence_transformers import SentenceTransformer
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 
@@ -25,9 +27,11 @@ logger = logging.getLogger(__name__)
 
 
 class TaskService:
-    def __init__(self, db_session: Session, client: OpenAI):
+    def __init__(self, db_session: Session, client: OpenAI, qdrant_client: QdrantClient, transformer_model: SentenceTransformer):
         self.db_session = db_session
         self.client = client
+        self.qdrant_client = qdrant_client
+        self.transformer_model = transformer_model
 
     async def generate_task_gpt(self, request: str) -> TaskResponseGptSchema:
         logger.debug(f"Начало создания задачи через GPT с запросом: {request}")
@@ -117,6 +121,27 @@ class TaskService:
                 mark=new_task.mark,
                 status=new_task.status,
             )
+
+            task_embedding = self.transformer_model.encode(new_task.title)
+            self.qdrant_client.add(
+                collection_name="tasks",
+                points=[
+                    {
+                        "id": task_id,
+                        "vector": task_embedding,
+                        "payload": {
+                            "title": new_task.title,
+                            "description": new_task.description,
+                            "start_time": new_task.start_time,
+                            "end_time": new_task.end_time,
+                            "reminder": new_task.reminder,
+                            "mark": new_task.mark,
+                            "status": new_task.status
+                        }
+                    }
+                ]
+            )
+
             return response
 
         except Exception as e:
