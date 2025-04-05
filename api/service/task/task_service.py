@@ -20,7 +20,7 @@ from database.models.task.task_model import TaskModel
 from sqlalchemy.orm import Session
 from openai import OpenAI
 
-from dependencies import get_open_ai_client
+from dependencies import get_open_ai_client, get_qdrant_client, get_transformer_model
 
 # Настраиваем логгер для этого модуля
 logger = logging.getLogger(__name__)
@@ -123,7 +123,7 @@ class TaskService:
             )
 
             task_embedding = self.transformer_model.encode(new_task.title)
-            self.qdrant_client.add(
+            self.qdrant_client.upsert(
                 collection_name="tasks",
                 points=[
                     {
@@ -286,8 +286,15 @@ class TaskService:
         ]
 
 
-def get_task_service(db: Session = Depends(get_db)) -> TaskService:
+def get_task_service(
+    db: Session = Depends(get_db),
+        client: OpenAI = Depends(get_open_ai_client),
+        qdrant_client: QdrantClient = Depends(get_qdrant_client),
+        transformer_model: SentenceTransformer = Depends(
+            get_transformer_model,
+    ),
+) -> TaskService:
     """
     Зависимость для получения Task сервиса
     """
-    return TaskService(db, get_open_ai_client())
+    return TaskService(db, client, qdrant_client, transformer_model)

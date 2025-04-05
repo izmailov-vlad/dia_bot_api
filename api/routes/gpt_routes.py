@@ -4,7 +4,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.middleware.auth_middleware import get_current_user
-from api.repository.task.task_repository import TaskRepository, get_task_repository
+from api.repository.task_repository import TaskRepository, get_task_repository
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
 from api.repository.gpt_repository import GPTRepository, get_gpt_repository
 from database.models.user.user_model import UserModel

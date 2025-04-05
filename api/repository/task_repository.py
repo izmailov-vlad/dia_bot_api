@@ -4,7 +4,7 @@ from fastapi import Depends
 from openai import OpenAI
 
 from api.schemas.task.task_update_schema import TaskUpdateSchema
-from api.service.task.task_service import TaskService
+from api.service.task.task_service import TaskService, get_task_service
 from api.schemas.task.task_create_schema import TaskCreateSchema
 from api.schemas.task.task_response_schema import TaskResponseSchema
 from api.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
@@ -138,8 +138,7 @@ class TaskRepository:
 
 
 def get_task_repository(
-    db: Session = Depends(get_db),
-    client: OpenAI = Depends(get_open_ai_client)
+    task_service: TaskService = Depends(get_task_service)
 ) -> TaskRepository:
     """
     Возвращает экземпляр TaskRepository для внедрения зависимости.
@@ -151,5 +150,4 @@ def get_task_repository(
     Returns:
         TaskRepository: Репозиторий для работы с задачами
     """
-    task_service = TaskService(db, client)
     return TaskRepository(task_service)
