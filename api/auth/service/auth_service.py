@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from database.models.user.user_model import UserModel
 from database.models.token_model import RefreshToken
-from api.schemas.token.token_schema import TokenSchema, TokenPayload
+from api.auth.schemas.token_schema import TokenSchema, TokenPayload
 
 # Константы для JWT
 # Используйте переменные окружения в реальном проекте

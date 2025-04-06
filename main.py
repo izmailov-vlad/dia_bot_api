@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-from api.routes import auth_routes, assistant_routes
+from api.auth.routes import auth_routes
+from api.routes import assistant_routes
 from api.routes.gpt_routes import router as gpt_router
 from api.task.routes import task_routes
 from api.user.routes import user_routes

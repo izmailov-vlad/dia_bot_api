@@ -2,8 +2,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
-from api.service.auth_service import AuthService
-from api.schemas.token.token_schema import TokenSchema
+from api.auth.service.auth_service import AuthService
+from api.auth.schemas.token_schema import TokenSchema
 from api.schemas.user.user_schema_request_create import UserSchemaRequestCreate
 from api.user.service.user_service import UserService
 from database.models.user.user_model import UserModel

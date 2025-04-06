@@ -9,19 +9,15 @@ from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue, MatchText
-
-from api.schemas.task.task_create_schema import TaskCreateSchema
-from api.schemas.task.task_response_schema import TaskResponseSchema
-from api.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
-from api.schemas.task.task_update_schema import TaskUpdateSchema
-from api.service.task.create_task_prompt import create_task_prompt
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+from api.task.schemas.task.task_response_schema import TaskResponseSchema
+from api.task.schemas.task.task_create_schema import TaskCreateSchema
+from api.task.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
+from api.task.schemas.task.task_update_schema import TaskUpdateSchema
 from database.database import get_db
 from database.models.task.task_model import TaskModel
 from sqlalchemy.orm import Session
 from openai import OpenAI
-
-from dependencies import get_open_ai_client, get_qdrant_client, get_transformer_model
 
 # Настраиваем логгер для этого модуля
 logger = logging.getLogger(__name__)
@@ -39,101 +35,6 @@ class TaskService:
         self.client = client
         self.qdrant_client = qdrant_client
         self.transformer_model = transformer_model
-
-    async def search_by_query(self, query: str, user_id: str) -> List[TaskResponseSchema]:
-        """Поиск задач по запросу для конкретного пользователя"""
-
-        # Создаем эмбеддинг для запроса
-        query_vector = self.transformer_model.encode(query)
-
-        # Ищем по векторному поиску
-        results = self.qdrant_client.search(
-            collection_name="tasks",
-            query_vector=query_vector,
-            query_filter=Filter(
-                must=[
-                    FieldCondition(
-                        key="user_id",
-                        match=MatchValue(value=user_id)
-                    )
-                ]
-            ),
-            limit=10
-        )
-        for r in results:
-            print('r.score: ', r.score)
-            print('r.payload: ', r.payload)
-        # Находим результат с максимальным score
-        max_score_result = max(results, key=lambda x: x.score, default=None)
-
-        # Преобразуем результат в TaskResponseSchema
-        tasks = []
-        if max_score_result:
-            task = TaskResponseSchema(
-                id=max_score_result.id,
-                title=max_score_result.payload["title"],
-                description=max_score_result.payload["description"],
-                start_time=max_score_result.payload["start_time"],
-                end_time=max_score_result.payload["end_time"],
-                reminder=max_score_result.payload["reminder"],
-                mark=max_score_result.payload["mark"],
-                status=max_score_result.payload["status"],
-            )
-            tasks.append(task)
-
-        return tasks
-
-    async def generate_task_gpt(self, request: str) -> TaskResponseGptSchema:
-        logger.debug(f"Начало создания задачи через GPT с запросом: {request}")
-
-        try:
-            logger.debug("Отправка запроса к модели GPT-4o")
-            response = self.client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": create_task_prompt,
-                            }
-                        ]
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": request
-                            }
-                        ]
-                    }
-                ],
-                response_format={
-                    "type": "json_object"
-                },
-                temperature=0,
-                max_completion_tokens=2048,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
-
-            gpt_response_json = response.choices[0].message.content
-            task_gpt_data = json.loads(gpt_response_json)
-            task_schema_response_gpt = TaskResponseGptSchema(**task_gpt_data)
-
-            return task_schema_response_gpt
-
-        except json.JSONDecodeError as e:
-            logger.error(f"Ошибка при парсинге JSON ответа от GPT: {str(e)}")
-            logger.error(f"Невалидный JSON: {gpt_response_json}")
-            raise
-        except Exception as e:
-            logger.error(
-                f"Ошибка при создании задачи через GPT: {str(e)}", exc_info=True)
-            raise
 
     async def create_task(
         self,
@@ -170,39 +71,6 @@ class TaskService:
                 reminder=new_task.reminder,
                 mark=new_task.mark,
                 status=new_task.status,
-            )
-
-            # Создаем текст для эмбеддинга из всех параметров задачи
-            task_text = f"""
-            Название: {new_task.title}
-            Описание: {new_task.description}
-            Статус: {new_task.status}
-            Метка: {new_task.mark}
-            Напоминание: {new_task.reminder}
-            Время начала: {new_task.start_time}
-            Время окончания: {new_task.end_time}
-            """
-
-            # Создаем эмбеддинг на основе полного текста задачи
-            task_embedding = self.transformer_model.encode(task_text)
-            self.qdrant_client.upsert(
-                collection_name="tasks",
-                points=[
-                    {
-                        "id": task_id,
-                        "vector": task_embedding,
-                        "payload": {
-                            "title": new_task.title,
-                            "description": new_task.description,
-                            "start_time": new_task.start_time,
-                            "end_time": new_task.end_time,
-                            "reminder": new_task.reminder,
-                            "mark": new_task.mark,
-                            "status": new_task.status,
-                            "user_id": user_id,
-                        }
-                    }
-                ]
             )
 
             return response
@@ -351,13 +219,8 @@ class TaskService:
 
 def get_task_service(
     db: Session = Depends(get_db),
-        client: OpenAI = Depends(get_open_ai_client),
-        qdrant_client: QdrantClient = Depends(get_qdrant_client),
-        transformer_model: SentenceTransformer = Depends(
-            get_transformer_model,
-    ),
 ) -> TaskService:
     """
     Зависимость для получения Task сервиса
     """
-    return TaskService(db, client, qdrant_client, transformer_model)
+    return TaskService(db)
