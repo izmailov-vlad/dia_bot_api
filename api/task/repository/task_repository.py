@@ -1,17 +1,11 @@
 from typing import List, Optional
 from datetime import datetime
 from fastapi import Depends
-from openai import OpenAI
-
-from api.schemas.task.task_update_schema import TaskUpdateSchema
-from api.service.task.task_service import TaskService, get_task_service
-from api.schemas.task.task_create_schema import TaskCreateSchema
-from api.schemas.task.task_response_schema import TaskResponseSchema
-from api.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
-from database.database import get_db
-from sqlalchemy.orm import Session
-
-from dependencies import get_open_ai_client
+from api.task.schemas.task.task_response_schema import TaskResponseSchema
+from api.task.schemas.task.task_create_schema import TaskCreateSchema
+from api.task.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
+from api.task.schemas.task.task_update_schema import TaskUpdateSchema
+from api.task.service.task_service import TaskService, get_task_service
 
 
 class TaskRepository:

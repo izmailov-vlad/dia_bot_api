@@ -1,7 +1,7 @@
 from openai import OpenAI
 from openai.types.chat.chat_completion import ChatCompletion
 from api.schemas.chat_gpt_request_schema import ChatGptRequestSchema
-from api.service.task.task_service import TaskService, get_task_service
+from api.task.service.task_service import TaskService, get_task_service
 from api.service.gpt.gpt_system_prompt import system_prompt
 from dependencies import get_open_ai_client
 

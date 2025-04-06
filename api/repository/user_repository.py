@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException
 
-from api.service.task.task_service import TaskService
+from api.task.service.task_service import TaskService
 from api.service.user_service import UserService, get_user_service
 from api.schemas.user.user_schema_request_create import UserSchemaRequestCreate
 from api.schemas.user.user_schema_response import UserSchemaResponse

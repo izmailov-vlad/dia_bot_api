@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 
 from api.middleware.auth_middleware import get_current_user
-from api.repository.task_repository import TaskRepository, get_task_repository
+from api.task.repository.task_repository import TaskRepository, get_task_repository
 from api.schemas.task.task_response_schema import TaskResponseSchema
 from database.models.user.user_model import UserModel
 

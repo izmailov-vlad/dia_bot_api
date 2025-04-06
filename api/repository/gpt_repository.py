@@ -4,7 +4,7 @@ from fastapi import Depends
 from api.schemas.task.task_create_schema import TaskCreateSchema
 from api.schemas.task.task_response_schema import TaskResponseSchema
 from api.service.gpt.gpt_service import GPTService, get_gpt_service
-from api.service.task.task_service import TaskService, get_task_service
+from api.task.service.task_service import TaskService, get_task_service
 
 from openai.types.chat.chat_completion import ChatCompletion
 
