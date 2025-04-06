@@ -9,6 +9,7 @@ from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue, MatchText
 
 from api.schemas.task.task_create_schema import TaskCreateSchema
 from api.schemas.task.task_response_schema import TaskResponseSchema
@@ -39,16 +40,48 @@ class TaskService:
         self.qdrant_client = qdrant_client
         self.transformer_model = transformer_model
 
-    async def search_by_query(self, query: str) -> List[TaskResponseSchema]:
-        """Поиск задач по запросу"""
+    async def search_by_query(self, query: str, user_id: str) -> List[TaskResponseSchema]:
+        """Поиск задач по запросу для конкретного пользователя"""
 
+        # Создаем эмбеддинг для запроса
+        query_vector = self.transformer_model.encode(query)
+
+        # Ищем по векторному поиску
         results = self.qdrant_client.search(
             collection_name="tasks",
-            query_vector=self.transformer_model.encode(query),
+            query_vector=query_vector,
+            query_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="user_id",
+                        match=MatchValue(value=user_id)
+                    )
+                ]
+            ),
             limit=10
         )
+        for r in results:
+            print('r.score: ', r.score)
+            print('r.payload: ', r.payload)
+        # Находим результат с максимальным score
+        max_score_result = max(results, key=lambda x: x.score, default=None)
 
-        return [{"task": r.payload, "score": r.score} for r in results]
+        # Преобразуем результат в TaskResponseSchema
+        tasks = []
+        if max_score_result:
+            task = TaskResponseSchema(
+                id=max_score_result.id,
+                title=max_score_result.payload["title"],
+                description=max_score_result.payload["description"],
+                start_time=max_score_result.payload["start_time"],
+                end_time=max_score_result.payload["end_time"],
+                reminder=max_score_result.payload["reminder"],
+                mark=max_score_result.payload["mark"],
+                status=max_score_result.payload["status"],
+            )
+            tasks.append(task)
+
+        return tasks
 
     async def generate_task_gpt(self, request: str) -> TaskResponseGptSchema:
         logger.debug(f"Начало создания задачи через GPT с запросом: {request}")
@@ -139,7 +172,19 @@ class TaskService:
                 status=new_task.status,
             )
 
-            task_embedding = self.transformer_model.encode(new_task.title)
+            # Создаем текст для эмбеддинга из всех параметров задачи
+            task_text = f"""
+            Название: {new_task.title}
+            Описание: {new_task.description}
+            Статус: {new_task.status}
+            Метка: {new_task.mark}
+            Напоминание: {new_task.reminder}
+            Время начала: {new_task.start_time}
+            Время окончания: {new_task.end_time}
+            """
+
+            # Создаем эмбеддинг на основе полного текста задачи
+            task_embedding = self.transformer_model.encode(task_text)
             self.qdrant_client.upsert(
                 collection_name="tasks",
                 points=[
@@ -153,7 +198,8 @@ class TaskService:
                             "end_time": new_task.end_time,
                             "reminder": new_task.reminder,
                             "mark": new_task.mark,
-                            "status": new_task.status
+                            "status": new_task.status,
+                            "user_id": user_id,
                         }
                     }
                 ]
