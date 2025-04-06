@@ -4,11 +4,11 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status
 
+from api.user.schemas.user_schema_request_create import UserSchemaRequestCreate
+from api.user.schemas.user_schema_response import UserSchemaResponse
+from api.user.schemas.user_schmea_request_update import UserSchemaRequestUpdate
 from database.database import get_db
 from database.models.user.user_model import UserModel
-from api.schemas.user.user_schema_request_create import UserSchemaRequestCreate
-from api.schemas.user.user_schema_response import UserSchemaResponse
-from api.schemas.user.user_schmea_request_update import UserSchemaRequestUpdate
 
 
 class UserService:
