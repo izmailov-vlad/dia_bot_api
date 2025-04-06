@@ -1,23 +1,17 @@
-import json
 import logging
 from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
 
 from fastapi import Depends
-from qdrant_client import QdrantClient
-from sentence_transformers import SentenceTransformer
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 from api.task.schemas.task.task_response_schema import TaskResponseSchema
 from api.task.schemas.task.task_create_schema import TaskCreateSchema
-from api.task.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
 from api.task.schemas.task.task_update_schema import TaskUpdateSchema
 from database.database import get_db
 from database.models.task.task_model import TaskModel
 from sqlalchemy.orm import Session
-from openai import OpenAI
 
 # Настраиваем логгер для этого модуля
 logger = logging.getLogger(__name__)
@@ -27,14 +21,8 @@ class TaskService:
     def __init__(
         self,
         db_session: Session,
-        client: OpenAI,
-        qdrant_client: QdrantClient,
-        transformer_model: SentenceTransformer,
     ):
         self.db_session = db_session
-        self.client = client
-        self.qdrant_client = qdrant_client
-        self.transformer_model = transformer_model
 
     async def create_task(
         self,
