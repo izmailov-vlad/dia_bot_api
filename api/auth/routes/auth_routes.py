@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from api.auth.repository.auth_repository import AuthRepository, get_auth_repository
-from api.schemas.user.user_schema_request_create import UserSchemaRequestCreate
 from api.auth.schemas.token_schema import TokenSchema, RefreshTokenRequest
-from api.middleware.auth_middleware import get_current_user
+from api.user.schemas.user_schema_request_create import UserSchemaRequestCreate
+from api.auth.middleware.auth_middleware import get_current_user
 from database.models.user.user_model import UserModel
 
 router = APIRouter(tags=["auth"], prefix="/auth")

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-
-from api.schemas.user.user_schema_request_create import UserSchemaRequestCreate
-from api.schemas.user.user_schema_response import UserSchemaResponse
-from api.schemas.user.user_schmea_request_update import UserSchemaRequestUpdate
+from api.user.schemas.user_schema_response import UserSchemaResponse
+from api.user.schemas.user_schema_request_create import UserSchemaRequestCreate
+from api.user.schemas.user_schmea_request_update import UserSchemaRequestUpdate
 from api.user.service.user_service import UserService, get_user_service
 
 router = APIRouter(tags=["users"], prefix="/users")

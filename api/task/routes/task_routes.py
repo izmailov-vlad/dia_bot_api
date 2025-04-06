@@ -3,11 +3,10 @@ from typing import List
 import logging
 
 from api.task.repository.task_repository import TaskRepository, get_task_repository
-from api.schemas.task.task_create_schema import TaskCreateSchema
-from api.schemas.task.task_response_schema import TaskResponseSchema
-from api.schemas.task.task_update_schema import TaskUpdateSchema
-
-from api.middleware.auth_middleware import get_current_user
+from api.task.schemas.task.task_response_schema import TaskResponseSchema
+from api.task.schemas.task.task_create_schema import TaskCreateSchema
+from api.task.schemas.task.task_update_schema import TaskUpdateSchema
+from api.auth.middleware.auth_middleware import get_current_user
 from database.models.user.user_model import UserModel
 
 # Настраиваем логгер для этого модуля
