@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/dia_db
+      - DATABASE_URL=postgresql://postgres:iIrpuyosHofIzUnnlLegJaHzfHEdxAyf@trolley.proxy.rlwy.net:48729/railway
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       db:
@@ -20,7 +20,7 @@ services:
     image: postgres:15
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=iIrpuyosHofIzUnnlLegJaHzfHEdxAyf
       - POSTGRES_DB=dia_db
     ports:
       - "5432:5432"
