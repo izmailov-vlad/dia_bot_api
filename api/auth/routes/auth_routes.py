@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Tuple
 
 from api.auth.repository.auth_repository import AuthRepository, get_auth_repository
 from api.auth.schemas.token_schema import TokenSchema, RefreshTokenRequest
-from api.user.schemas.user_schema_request_create import UserSchemaRequestCreate
+from api.auth.schemas.auth_register_schema import AuthRegisterSchema
+from api.auth.schemas.auth_login_schema import AuthLoginSchema
 from api.auth.middleware.auth_middleware import get_current_user
 from database.models.user.user_model import UserModel
 
@@ -11,20 +13,11 @@ router = APIRouter(tags=["auth"], prefix="/auth")
 
 @router.post("/login", response_model=TokenSchema)
 def login(
-    telegram_id: str,
+    user_data: AuthLoginSchema,
     auth_repository: AuthRepository = Depends(get_auth_repository)
 ):
-    """Аутентификация пользователя и получение токенов"""
-    user = auth_repository.authenticate_user(telegram_id)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Пользователь не найден",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return auth_repository.create_tokens(user.id)
+    """Авторизация пользователя"""
+    return auth_repository.login(user_data)
 
 
 @router.post("/refresh", response_model=TokenSchema)
@@ -55,16 +48,10 @@ def logout(
     return {}
 
 
-@router.post("/register", response_model=TokenSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=TokenSchema)
 def register(
-    user_data: UserSchemaRequestCreate,
+    user_data: AuthRegisterSchema,
     auth_repository: AuthRepository = Depends(get_auth_repository)
 ):
-    """
-    Регистрация нового пользователя
-
-    - Проверяет, существует ли пользователь с таким telegram_id
-    - Если нет, создает нового пользователя
-    - Возвращает access и refresh токены
-    """
-    return auth_repository.register_user(user_data)
+    """Регистрация нового пользователя"""
+    return auth_repository.register(user_data)

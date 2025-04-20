@@ -23,8 +23,8 @@ def upgrade() -> None:
     op.create_table(
         'users',
         sa.Column('id', sa.String(), nullable=False),
-        sa.Column('telegram_id', sa.String(), nullable=False),
-        sa.Column('username', sa.String(), nullable=False),
+        sa.Column('email', sa.String(), nullable=False),
+        sa.Column('hashed_password', sa.String(), nullable=False),
         sa.Column(
             'created_at',
             sa.DateTime(),
@@ -38,20 +38,16 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('telegram_id')
+        sa.UniqueConstraint('email')
     )
 
-    # Создаем индекс для ускорения поиска по telegram_id
-    op.create_index('ix_users_telegram_id', 'users', ['telegram_id'])
-
-    # Создаем индекс для ускорения поиска по username
-    op.create_index('ix_users_username', 'users', ['username'])
+    # Создаем индекс для ускорения поиска по email
+    op.create_index('ix_users_email', 'users', ['email'])
 
 
 def downgrade() -> None:
-    # Удаляем индексы
-    op.drop_index('ix_users_username')
-    op.drop_index('ix_users_telegram_id')
+    # Удаляем индекс
+    op.drop_index('ix_users_email')
 
     # Удаляем таблицу
     op.drop_table('users')

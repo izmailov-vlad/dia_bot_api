@@ -1,13 +1,17 @@
-from typing import Optional
+from typing import Optional, Tuple
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from uuid import uuid4
+from fastapi import Depends, HTTPException, status
 
-from database.models.user.user_model import UserModel
+from database.database import get_db
+from database.models.user import UserModel
 from database.models.token_model import RefreshToken
-from api.auth.schemas.token_schema import TokenSchema, TokenPayload
+from api.auth.schemas.token_schema import TokenSchema
+from api.auth.schemas.auth_register_schema import AuthRegisterSchema
+from api.auth.schemas.auth_login_schema import AuthLoginSchema
 
 # Константы для JWT
 # Используйте переменные окружения в реальном проекте
@@ -28,11 +32,62 @@ class AuthService:
         """Проверка пароля"""
         return pwd_context.verify(plain_password, hashed_password)
 
-    def authenticate_user(self, telegram_id: str) -> Optional[UserModel]:
-        """Аутентификация пользователя по telegram_id"""
-        user = self.db_session.query(UserModel).filter(
-            UserModel.telegram_id == telegram_id).first()
-        return user
+    def get_password_hash(self, password: str) -> str:
+        """Хеширование пароля"""
+        return pwd_context.hash(password)
+
+    def get_user_by_email(self, email: str) -> Optional[UserModel]:
+        """Получение пользователя по email"""
+        return self.db_session.query(UserModel).filter(UserModel.email == email).first()
+
+    def register(self, user_data: AuthRegisterSchema) -> TokenSchema:
+        """Регистрация нового пользователя"""
+        # Проверяем, существует ли пользователь с таким email
+        existing_user = self.get_user_by_email(user_data.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Пользователь с таким email уже существует"
+            )
+
+        # Создаем нового пользователя
+        hashed_password = self.get_password_hash(user_data.password)
+        user = UserModel(
+            id=str(uuid4()),
+            email=user_data.email,
+            hashed_password=hashed_password
+        )
+
+        self.db_session.add(user)
+        self.db_session.commit()
+        self.db_session.refresh(user)
+
+        # Создаем токены для нового пользователя
+        tokens = self.create_tokens(user.id)
+
+        return tokens
+
+    def login(self, user_data: AuthLoginSchema) -> TokenSchema:
+        """Авторизация пользователя"""
+        # Получаем пользователя по email
+        user = self.get_user_by_email(user_data.email)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Неверный email или пароль"
+            )
+
+        # Проверяем пароль
+        if not self.verify_password(user_data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Неверный email или пароль"
+            )
+
+        # Создаем новые токены
+        tokens = self.create_tokens(user.id)
+
+        return tokens
 
     def create_access_token(self, user_id: str) -> str:
         """Создание access токена"""
@@ -132,3 +187,10 @@ class AuthService:
 
         self.db_session.commit()
         return True
+
+
+def get_auth_service(db_session: Session = Depends(get_db)) -> AuthService:
+    """
+    Зависимость для получения AuthService
+    """
+    return AuthService(db_session)

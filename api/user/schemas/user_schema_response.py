@@ -1,13 +1,12 @@
-from openai import BaseModel
+from pydantic import BaseModel
 from datetime import datetime
 
 
 class UserSchemaResponse(BaseModel):
     id: str
-    telegram_id: str
-    username: str
-    created_at: datetime
-    updated_at: datetime
+    email: str
+    created_at: str
+    updated_at: str
 
     class Config:
         from_attributes = True
