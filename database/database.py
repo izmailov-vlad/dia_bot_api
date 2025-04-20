@@ -3,8 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from typing import Generator
 import os
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://admin:admin@localhost:5432/dia_db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Создаем синхронный движок
 engine = create_engine(DATABASE_URL)
