@@ -134,6 +134,19 @@ class TaskRepository:
         """
         return await self.task_service.get_tasks_by_date_range(start_date, end_date)
 
+    async def get_tasks_by_date(self, date: datetime, user_id: str) -> List[TaskResponseSchema]:
+        """
+        Получает задачи на конкретный день
+
+        Args:
+            date: Дата, на которую нужно получить задачи
+            user_id: ID пользователя
+
+        Returns:
+            List[TaskSchemaResponse]: Список задач на указанную дату
+        """
+        return await self.task_service.get_tasks_by_date(date, user_id)
+
 
 def get_task_repository(
     task_service: TaskService = Depends(get_task_service)

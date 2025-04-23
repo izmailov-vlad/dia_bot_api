@@ -204,6 +204,40 @@ class TaskService:
             ) for task in tasks
         ]
 
+    async def get_tasks_by_date(self, date: datetime, user_id: str) -> List[TaskResponseSchema]:
+        """Получить задачи на конкретный день"""
+        try:
+            # Устанавливаем начало и конец дня
+            start_of_day = datetime(date.year, date.month, date.day, 0, 0, 0)
+            end_of_day = datetime(date.year, date.month, date.day, 23, 59, 59)
+
+            query = select(TaskModel).where(
+                TaskModel.user_id == user_id,
+                TaskModel.start_time >= start_of_day,
+                TaskModel.start_time <= end_of_day
+            )
+            result = self.db_session.execute(query)
+            tasks = result.scalars().all()
+
+            return [
+                TaskResponseSchema(
+                    id=task.id,
+                    title=task.title,
+                    description=task.description,
+                    start_time=task.start_time,
+                    end_time=task.end_time,
+                    reminder=task.reminder,
+                    mark=task.mark,
+                    status=task.status,
+                    created_at=task.created_at,
+                    updated_at=task.updated_at
+                ) for task in tasks
+            ]
+        except Exception as e:
+            logger.error(
+                f"Ошибка при получении задач по дате: {str(e)}", exc_info=True)
+            raise
+
 
 def get_task_service(
     db: Session = Depends(get_db),

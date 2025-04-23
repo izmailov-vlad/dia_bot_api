@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from typing import List
 import logging
+from datetime import datetime
 
 from api.task.repository.task_repository import TaskRepository, get_task_repository
 from api.task.schemas.task.task_response_schema import TaskResponseSchema
@@ -67,3 +68,13 @@ async def delete_task(
     """Удаление задачи"""
     success = await task_repository.delete_task(task_id, current_user.id)
     return {'success': success}
+
+
+@router.get("/tasks/by-date/", response_model=List[TaskResponseSchema])
+async def get_tasks_by_date(
+    date: datetime = Query(..., description="Дата в формате YYYY-MM-DD"),
+    current_user: UserModel = Depends(get_current_user),
+    task_repository: TaskRepository = Depends(get_task_repository)
+):
+    """Получение задач на конкретный день"""
+    return await task_repository.get_tasks_by_date(date, current_user.id)
