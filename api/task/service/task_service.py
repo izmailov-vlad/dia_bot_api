@@ -219,19 +219,11 @@ class TaskService:
             result = self.db_session.execute(query)
             tasks = result.scalars().all()
 
+            if not tasks:
+                return []
+
             return [
-                TaskResponseSchema(
-                    id=task.id,
-                    title=task.title,
-                    description=task.description,
-                    start_time=task.start_time,
-                    end_time=task.end_time,
-                    reminder=task.reminder,
-                    mark=task.mark,
-                    status=task.status,
-                    created_at=task.created_at,
-                    updated_at=task.updated_at
-                ) for task in tasks
+                TaskResponseSchema.model_validate(task) for task in tasks
             ]
         except Exception as e:
             logger.error(

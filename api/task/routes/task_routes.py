@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from typing import List
+from typing import Annotated, List
 import logging
 from datetime import datetime
 
@@ -7,6 +7,7 @@ from api.task.repository.task_repository import TaskRepository, get_task_reposit
 from api.task.schemas.task.task_response_schema import TaskResponseSchema
 from api.task.schemas.task.task_create_schema import TaskCreateSchema
 from api.task.schemas.task.task_update_schema import TaskUpdateSchema
+from api.task.schemas.task.task_list_response_schema import TasksResponseSchema
 from api.auth.middleware.auth_middleware import get_current_user
 from database.models.user.user_model import UserModel
 
@@ -70,11 +71,12 @@ async def delete_task(
     return {'success': success}
 
 
-@router.get("/tasks/by-date/", response_model=List[TaskResponseSchema])
+@router.get("/tasks/by-date", response_model=TasksResponseSchema)
 async def get_tasks_by_date(
-    date: datetime = Query(..., description="Дата в формате YYYY-MM-DD"),
+    date: datetime = Query(...),
     current_user: UserModel = Depends(get_current_user),
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
     """Получение задач на конкретный день"""
-    return await task_repository.get_tasks_by_date(date, current_user.id)
+    tasks = await task_repository.get_tasks_by_date(date, current_user.id)
+    return TasksResponseSchema(tasks=tasks)

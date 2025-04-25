@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
-from database.models.task.task_model import TaskStatusModel
 
 
 class TaskResponseSchema(BaseModel):
@@ -12,8 +11,6 @@ class TaskResponseSchema(BaseModel):
     end_time: Optional[datetime]
     reminder: Optional[datetime]
     mark: Optional[str]
-    # TODO: change to TaskStatusSchema
-    status: TaskStatusModel
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
