@@ -6,6 +6,9 @@ from api.task.schemas.task.task_create_schema import TaskCreateSchema
 from api.task.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
 from api.task.schemas.task.task_update_schema import TaskUpdateSchema
 from api.task.service.task_service import TaskService, get_task_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TaskRepository:
@@ -145,7 +148,16 @@ class TaskRepository:
         Returns:
             List[TaskSchemaResponse]: Список задач на указанную дату
         """
-        return await self.task_service.get_tasks_by_date(date, user_id)
+        logger.info(
+            f"Repository: Запрос задач для пользователя {user_id} на дату {date.date()}")
+        try:
+            tasks = await self.task_service.get_tasks_by_date(date, user_id)
+            logger.info(f"Repository: Получено {len(tasks)} задач")
+            return tasks
+        except Exception as e:
+            logger.error(
+                f"Repository: Ошибка при получении задач: {str(e)}", exc_info=True)
+            raise
 
 
 def get_task_repository(

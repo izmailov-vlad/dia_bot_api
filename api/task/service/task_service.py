@@ -211,6 +211,9 @@ class TaskService:
             start_of_day = datetime(date.year, date.month, date.day, 0, 0, 0)
             end_of_day = datetime(date.year, date.month, date.day, 23, 59, 59)
 
+            logger.info(
+                f"Поиск задач для пользователя {user_id} на дату {date.date()}")
+
             query = select(TaskModel).where(
                 TaskModel.user_id == user_id,
                 TaskModel.start_time >= start_of_day,
@@ -220,8 +223,12 @@ class TaskService:
             tasks = result.scalars().all()
 
             if not tasks:
+                logger.info(
+                    f"Задачи не найдены для пользователя {user_id} на дату {date.date()}")
                 return []
 
+            logger.info(
+                f"Найдено {len(tasks)} задач для пользователя {user_id} на дату {date.date()}")
             return [
                 TaskResponseSchema.model_validate(task) for task in tasks
             ]

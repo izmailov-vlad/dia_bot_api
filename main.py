@@ -6,20 +6,24 @@ from api.auth.routes import auth_routes
 from api.task.routes import task_routes
 from api.user.routes import user_routes
 from database.database import Base, engine
+from config.logging_config import setup_logging
 
 
 # Создаем таблицы
 Base.metadata.create_all(bind=engine)
 
+# Инициализируем логирование
+setup_logging()
+
 # Настройка логирования
-logging.basicConfig(
-    level=logging.DEBUG,  # Для продакшена используйте logging.INFO или logging.WARNING
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("debug.log"),
-        logging.StreamHandler()
-    ]
-)
+# logging.basicConfig(
+#     level=logging.DEBUG,  # Для продакшена используйте logging.INFO или logging.WARNING
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.FileHandler("debug.log"),
+#         logging.StreamHandler()
+#     ]
+# )
 
 # Инициализация FastAPI приложения
 app = FastAPI(title="Task Management API")

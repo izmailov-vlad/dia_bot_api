@@ -71,7 +71,7 @@ async def delete_task(
     return {'success': success}
 
 
-@router.get("/tasks/by-date", response_model=TasksResponseSchema)
+@router.get("/tasks/by-date/", response_model=TasksResponseSchema)
 async def get_tasks_by_date(
     date: datetime = Query(...),
     current_user: UserModel = Depends(get_current_user),

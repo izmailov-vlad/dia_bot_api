@@ -13,8 +13,14 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+      - ./logs:/app/logs
     env_file:
       - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   db:
     image: postgres:15
