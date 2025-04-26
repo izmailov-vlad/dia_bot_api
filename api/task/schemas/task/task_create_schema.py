@@ -7,7 +7,8 @@ from database.models.task.task_model import TaskStatusModel
 class TaskCreateSchema(BaseModel):
     title: str
     description: Optional[str] = None
-    start_time: datetime
+    date: datetime
+    start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     reminder: Optional[datetime] = None
     mark: Optional[str] = None

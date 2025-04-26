@@ -7,7 +7,8 @@ class TaskResponseSchema(BaseModel):
     id: str
     title: str
     description: Optional[str]
-    start_time: datetime
+    date: datetime
+    start_time: Optional[datetime]
     end_time: Optional[datetime]
     reminder: Optional[datetime]
     mark: Optional[str]

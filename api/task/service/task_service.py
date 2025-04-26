@@ -37,6 +37,7 @@ class TaskService:
                 user_id=user_id,
                 title=task.title,
                 description=task.description,
+                date=task.date,
                 start_time=task.start_time,
                 end_time=task.end_time,
                 reminder=task.reminder,
@@ -54,6 +55,7 @@ class TaskService:
                 id=task_id,
                 title=new_task.title,
                 description=new_task.description,
+                date=new_task.date,
                 start_time=new_task.start_time,
                 end_time=new_task.end_time,
                 reminder=new_task.reminder,
@@ -184,26 +186,6 @@ class TaskService:
 
         return True
 
-    async def get_tasks_by_date_range(self, start_date: datetime, end_date: datetime) -> List[TaskResponseSchema]:
-        """Получить задачи в заданном временном диапазоне"""
-
-        query = select(TaskModel).where(
-            TaskModel.start_time >= start_date,
-            TaskModel.end_time <= end_date
-        )
-        result = self.db_session.execute(query)
-        tasks = result.scalars().all()
-
-        return [
-            TaskResponseSchema(
-                id=task.id,
-                title=task.title,
-                description=task.description,
-                start_time=task.start_time,
-                end_time=task.end_time
-            ) for task in tasks
-        ]
-
     async def get_tasks_by_date(self, date: datetime, user_id: str) -> List[TaskResponseSchema]:
         """Получить задачи на конкретный день"""
         try:
@@ -216,8 +198,7 @@ class TaskService:
 
             query = select(TaskModel).where(
                 TaskModel.user_id == user_id,
-                TaskModel.start_time >= start_of_day,
-                TaskModel.start_time <= end_of_day
+                TaskModel.date == date.date()
             )
             result = self.db_session.execute(query)
             tasks = result.scalars().all()

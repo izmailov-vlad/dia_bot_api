@@ -122,21 +122,6 @@ class TaskRepository:
         """
         return await self.task_service.delete_task(task_id, user_id)
 
-    async def get_tasks_by_date_range(
-        self, start_date: datetime, end_date: datetime
-    ) -> List[TaskResponseSchema]:
-        """
-        Получает задачи в заданном временном диапазоне
-
-        Args:
-            start_date: Начальная дата
-            end_date: Конечная дата
-
-        Returns:
-            List[TaskSchemaResponse]: Список задач в указанном диапазоне
-        """
-        return await self.task_service.get_tasks_by_date_range(start_date, end_date)
-
     async def get_tasks_by_date(self, date: datetime, user_id: str) -> List[TaskResponseSchema]:
         """
         Получает задачи на конкретный день
