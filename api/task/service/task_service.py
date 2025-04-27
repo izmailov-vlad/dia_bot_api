@@ -10,7 +10,7 @@ from api.task.schemas.task.task_response_schema import TaskResponseSchema
 from api.task.schemas.task.task_create_schema import TaskCreateSchema
 from api.task.schemas.task.task_update_schema import TaskUpdateSchema
 from database.database import get_db
-from database.models.task.task_model import TaskModel
+from database.models.task.task_model import TaskModel, TaskStatusModel
 from sqlalchemy.orm import Session
 
 # Настраиваем логгер для этого модуля
@@ -186,7 +186,7 @@ class TaskService:
 
         return True
 
-    async def get_tasks_by_date(self, date: datetime, user_id: str) -> List[TaskResponseSchema]:
+    async def get_tasks_by_date(self, date: datetime, status: TaskStatusModel, user_id: str) -> List[TaskResponseSchema]:
         """Получить задачи на конкретный день"""
         try:
             logger.info(
@@ -194,7 +194,8 @@ class TaskService:
 
             query = select(TaskModel).where(
                 TaskModel.user_id == user_id,
-                TaskModel.date == date.date()
+                TaskModel.date == date.date(),
+                TaskModel.status == status
             )
             result = self.db_session.execute(query)
             tasks = result.scalars().all()

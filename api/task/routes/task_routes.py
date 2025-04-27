@@ -9,6 +9,7 @@ from api.task.schemas.task.task_create_schema import TaskCreateSchema
 from api.task.schemas.task.task_update_schema import TaskUpdateSchema
 from api.task.schemas.task.task_list_response_schema import TasksResponseSchema
 from api.auth.middleware.auth_middleware import get_current_user
+from database.models.task.task_model import TaskStatusModel
 from database.models.user.user_model import UserModel
 
 # Настраиваем логгер для этого модуля
@@ -84,9 +85,10 @@ async def delete_task(
 @router.get("/tasks/by-date/", response_model=TasksResponseSchema)
 async def get_tasks_by_date(
     date: datetime = Query(...),
+    status: TaskStatusModel = Query(TaskStatusModel.created),
     current_user: UserModel = Depends(get_current_user),
     task_repository: TaskRepository = Depends(get_task_repository)
 ):
     """Получение задач на конкретный день"""
-    tasks = await task_repository.get_tasks_by_date(date, current_user.id)
+    tasks = await task_repository.get_tasks_by_date(date, status, current_user.id)
     return TasksResponseSchema(tasks=tasks)

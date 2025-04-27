@@ -8,6 +8,8 @@ from api.task.schemas.task.task_update_schema import TaskUpdateSchema
 from api.task.service.task_service import TaskService, get_task_service
 import logging
 
+from database.models.task.task_model import TaskStatusModel
+
 logger = logging.getLogger(__name__)
 
 
@@ -146,7 +148,7 @@ class TaskRepository:
         """
         return await self.task_service.delete_task(task_id, user_id)
 
-    async def get_tasks_by_date(self, date: datetime, user_id: str) -> List[TaskResponseSchema]:
+    async def get_tasks_by_date(self, date: datetime, status: TaskStatusModel, user_id: str) -> List[TaskResponseSchema]:
         """
         Получает задачи на конкретный день
 
@@ -160,7 +162,7 @@ class TaskRepository:
         logger.info(
             f"Repository: Запрос задач для пользователя {user_id} на дату {date.date()}")
         try:
-            tasks = await self.task_service.get_tasks_by_date(date, user_id)
+            tasks = await self.task_service.get_tasks_by_date(date, status, user_id)
             logger.info(f"Repository: Получено {len(tasks)} задач")
             return tasks
         except Exception as e:
