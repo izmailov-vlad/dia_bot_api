@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from api.task.schemas.task.task_response_schema import TaskResponseSchema
 from api.task.schemas.task.task_create_schema import TaskCreateSchema
 from api.task.schemas.task.task_response_gpt_schema import TaskResponseGptSchema
@@ -67,6 +67,30 @@ class TaskRepository:
             TaskSchemaResponse: Созданная задача
         """
         return await self.task_service.create_task(task, user_id)
+
+    async def mark_task_completed(self, task_id: str, user_id: str) -> Optional[TaskResponseSchema]:
+        """
+        Отмечает задачу как выполненную
+        """
+        try:
+            task = await self.task_service.mark_task_completed(task_id, user_id)
+            if not task:
+                logger.warning(
+                    f"Задача не найдена: task_id={task_id}, user_id={user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Задача не найдена"
+                )
+            return task
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(
+                f"Ошибка при отметке задачи как выполненной: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Произошла ошибка при отметке задачи как выполненной"
+            )
 
     async def get_task_by_id(self, task_id: str, user_id: str) -> Optional[TaskResponseSchema]:
         """

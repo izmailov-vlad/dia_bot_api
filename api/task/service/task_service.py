@@ -189,10 +189,6 @@ class TaskService:
     async def get_tasks_by_date(self, date: datetime, user_id: str) -> List[TaskResponseSchema]:
         """Получить задачи на конкретный день"""
         try:
-            # Устанавливаем начало и конец дня
-            start_of_day = datetime(date.year, date.month, date.day, 0, 0, 0)
-            end_of_day = datetime(date.year, date.month, date.day, 23, 59, 59)
-
             logger.info(
                 f"Поиск задач для пользователя {user_id} на дату {date.date()}")
 
@@ -217,6 +213,25 @@ class TaskService:
             logger.error(
                 f"Ошибка при получении задач по дате: {str(e)}", exc_info=True)
             raise
+
+    async def mark_task_completed(self, task_id: str, user_id: str) -> Optional[TaskResponseSchema]:
+        """Отметить задачу как выполненную"""
+        task = await self.get_task_by_id(task_id, user_id)
+        if not task:
+            return None
+
+        query = update(TaskModel).where(
+            TaskModel.id == task_id,
+            TaskModel.user_id == user_id
+        ).values(
+            status="completed",
+            updated_at=datetime.now()
+        )
+
+        self.db_session.execute(query)
+        self.db_session.commit()
+
+        return await self.get_task_by_id(task_id, user_id)
 
 
 def get_task_service(

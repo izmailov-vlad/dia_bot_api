@@ -30,6 +30,16 @@ async def create_task(
         raise
 
 
+@router.patch("/tasks/{task_id}/complete", response_model=TaskResponseSchema)
+async def mark_task_completed(
+    task_id: str,
+    current_user: UserModel = Depends(get_current_user),
+    task_repository: TaskRepository = Depends(get_task_repository)
+):
+    """Отметить задачу как выполненную"""
+    return await task_repository.mark_task_completed(task_id, current_user.id)
+
+
 @router.get("/tasks/{task_id}", response_model=TaskResponseSchema)
 async def get_task(
     task_id: str,
