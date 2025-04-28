@@ -92,6 +92,7 @@ class TaskService:
                 title=task.title,
                 description=task.description,
                 start_time=task.start_time,
+                date=task.date,
                 end_time=task.end_time,
                 reminder=task.reminder,
                 mark=task.mark,
