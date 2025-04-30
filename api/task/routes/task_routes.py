@@ -51,15 +51,6 @@ async def get_task(
     return await task_repository.get_task_by_id(task_id, current_user.id)
 
 
-@router.get("/tasks", response_model=List[TaskResponseSchema])
-async def get_tasks(
-    current_user: UserModel = Depends(get_current_user),
-    task_repository: TaskRepository = Depends(get_task_repository),
-):
-    """Получение всех задач"""
-    return await task_repository.get_all_tasks(current_user.id)
-
-
 @router.put("/tasks/{task_id}", response_model=TaskResponseSchema)
 async def update_task(
     task_id: str,

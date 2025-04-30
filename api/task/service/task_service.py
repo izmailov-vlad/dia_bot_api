@@ -3,7 +3,7 @@ from typing import List, Optional
 from uuid import uuid4
 from datetime import datetime
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.future import select
 from sqlalchemy import update, delete
 from api.task.schemas.task.task_response_schema import TaskResponseSchema
@@ -56,10 +56,6 @@ class TaskService:
                 title=new_task.title,
                 description=new_task.description,
                 date=new_task.date,
-                start_time=new_task.start_time,
-                end_time=new_task.end_time,
-                reminder=new_task.reminder,
-                mark=new_task.mark,
                 status=new_task.status,
             )
 
@@ -91,11 +87,7 @@ class TaskService:
                 id=task.id,
                 title=task.title,
                 description=task.description,
-                start_time=task.start_time,
                 date=task.date,
-                end_time=task.end_time,
-                reminder=task.reminder,
-                mark=task.mark,
                 status=task.status,
             )
             return response
@@ -108,69 +100,51 @@ class TaskService:
             logger.debug("=== ОШИБКА ПОЛУЧЕНИЯ ЗАДАЧИ ПО ID ===")
             raise
 
-    async def get_all_tasks(self, user_id: str) -> List[TaskResponseSchema]:
-        """
-        Получить все задачи пользователя
-
-        Args:
-            user_id: ID пользователя
-
-        Returns:
-            List[TaskSchemaResponse]: Список задач, принадлежащих указанному пользователю
-        """
-        try:
-            query = select(TaskModel).where(TaskModel.user_id == user_id)
-            result = self.db_session.execute(query)
-            tasks = result.scalars().all()
-            task_responses = [
-                TaskResponseSchema(
-                    id=task.id,
-                    title=task.title,
-                    description=task.description,
-                    start_time=task.start_time,
-                    end_time=task.end_time,
-                    reminder=task.reminder,
-                    mark=task.mark,
-                    status=task.status,
-                ) for task in tasks
-            ]
-
-            return task_responses
-
-        except Exception as e:
-            logger.error(
-                f"Ошибка при получении задач пользователя: {str(e)}", exc_info=True)
-            raise
-
     async def update_task(
         self,
         task_id: str,
         user_id: str,
-        new_task: TaskUpdateSchema,
+        update_task_params: TaskUpdateSchema,
     ) -> Optional[TaskResponseSchema]:
-        """Обновить задачу"""
+        """
+        Обновляет задачу в базе данных
 
-        task = await self.get_task_by_id(task_id, user_id)
-        if not task:
+        Args:
+            task_id: ID задачи для обновления
+            user_id: ID пользователя
+            new_task: Данные для обновления задачи
+
+        Returns:
+            Optional[TaskResponseSchema]: Обновленная задача или None, если задача не найдена
+        """
+        # Проверяем существование задачи
+        existing_task = await self.get_task_by_id(task_id, user_id)
+        if not existing_task:
+            logger.warning(
+                f"Задача не найдена: task_id={task_id}, user_id={user_id}")
             return None
 
-        update_data = {}
-        # Добавляем новые поля в обновление
-        for field in ['title', 'description', 'start_time', 'end_time',
-                      'reminder', 'mark', 'status']:
-            if hasattr(new_task, field) and getattr(new_task, field) is not None:
-                update_data[field] = getattr(new_task, field)
+        # Подготавливаем данные для обновления
+        update_task_params_dict = update_task_params.model_dump(
+            exclude_unset=True
+        )
+        if not update_task_params_dict:
+            logger.warning(f"Нет данных для обновления: task_id={task_id}")
+            return existing_task
 
-        update_data["updated_at"] = datetime.now()
+        # Добавляем время обновления
+        update_task_params_dict["updated_at"] = datetime.now()
 
+        # Выполняем обновление одним запросом
         query = update(TaskModel).where(
             TaskModel.id == task_id,
             TaskModel.user_id == user_id
-        ).values(**update_data)
+        ).values(**update_task_params_dict)
 
         self.db_session.execute(query)
         self.db_session.commit()
 
+        # Получаем обновленную задачу
         return await self.get_task_by_id(task_id, user_id)
 
     async def delete_task(self, task_id: str, user_id: str) -> bool:

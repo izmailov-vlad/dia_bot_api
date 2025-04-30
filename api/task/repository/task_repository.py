@@ -106,15 +106,6 @@ class TaskRepository:
         """
         return await self.task_service.get_task_by_id(task_id, user_id)
 
-    async def get_all_tasks(self, user_id: str) -> List[TaskResponseSchema]:
-        """
-        Получает все задачи
-
-        Returns:
-            List[TaskSchemaResponse]: Список всех задач
-        """
-        return await self.task_service.get_all_tasks(user_id)
-
     async def update_task(
         self,
         task_id: str,
@@ -130,11 +121,33 @@ class TaskRepository:
             task: Данные для обновления задачи
 
         Returns:
-            Optional[TaskSchemaResponse]: Обновленная задача или None
+            Optional[TaskResponseSchema]: Обновленная задача или None
+
+        Raises:
+            HTTPException: Если произошла ошибка при обновлении задачи
         """
-        return await self.task_service.update_task(
-            task_id, user_id, task
-        )
+        try:
+            updated_task = await self.task_service.update_task(
+                task_id, user_id, task
+            )
+            if not updated_task:
+                logger.warning(
+                    f"Задача не найдена: task_id={task_id}, user_id={user_id}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Задача не найдена"
+                )
+            return updated_task
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(
+                f"Ошибка при обновлении задачи: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Произошла ошибка при обновлении задачи"
+            )
 
     async def delete_task(self, task_id: str, user_id: str) -> bool:
         """
